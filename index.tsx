@@ -7,20 +7,22 @@ const root = createRoot(document.getElementById("root"))
 root.render(<App />)
 
 function App() {
-  const turn = 2
+  let [turn, setTurn] = useState(1)
   let [gameStatus, setGameStatus] = useState("Playing")
   let [board, setBoard] = useState(
     Array.from({ length: 19 }, () => Array.from({ length: 19 }, () => 0))
   )
 
   useEffect(() => {
-    aiplay(1)
+    if (new URLSearchParams(location.search).has("aiplaysfirst")) {
+      aiplay(turn)
+    }
   }, [])
 
   let handleClick = (x: number, y: number) => (event: MouseEvent) => {
     if (board[y][x] === 0) {
       board[y][x] = turn
-      aiplay(1)
+      aiplay((3 - turn) as any)
     }
   }
 
@@ -44,16 +46,17 @@ function App() {
     )
     let position =
       positionArray[Math.floor(Math.random() * positionArray.length)]
-    board[position.y][position.x] = 3 - turn
+    board[position.y][position.x] = turn
     setGameStatus(`Playing (${positionArray.length})`)
     setBoard(board.slice())
     if (play(turn, board) === "gameover") {
       setGameStatus("Game Over")
       return
     } else {
-      setTimeout(() => {
-        aiplay((3 - turn) as any)
-      }, 0)
+      setTurn((3 - turn) as any)
+      // setTimeout(() => {
+      //   aiplay((3 - turn) as any)
+      // }, 0)
     }
   }
 
