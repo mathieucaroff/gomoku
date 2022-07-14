@@ -14,31 +14,34 @@ function App() {
   )
 
   useEffect(() => {
-    aiplay()
-    setBoard(board.slice())
+    aiplay(1)
   }, [])
 
   let handleClick = (x: number, y: number) => (event: MouseEvent) => {
     if (board[y][x] === 0) {
       board[y][x] = turn
-      aiplay()
-      setBoard(board.slice())
+      aiplay(1)
     }
   }
 
-  function aiplay() {
-    let positionArray = play((3 - turn) as any, board)
+  function aiplay(turn: 1 | 2) {
+    let positionArray = play(turn, board)
     if (positionArray === "gameover") {
       setGameStatus("Game Over")
       return
     }
-    setGameStatus(`Playing (${positionArray.length})`)
     let position =
       positionArray[Math.floor(Math.random() * positionArray.length)]
     board[position.y][position.x] = 3 - turn
+    setGameStatus(`Playing (${positionArray.length})`)
+    setBoard(board.slice())
     if (play(turn, board) === "gameover") {
       setGameStatus("Game Over")
       return
+    } else {
+      setTimeout(() => {
+        aiplay((3 - turn) as any)
+      }, 10)
     }
   }
 

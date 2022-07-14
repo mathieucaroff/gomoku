@@ -130,5 +130,5 @@ export function play(turn: 1 | 2, board: Board): Position[] | "gameover" {
     }
   }
 
-  throw new Error()
+  return "gameover"
 }
