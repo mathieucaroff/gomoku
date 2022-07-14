@@ -5,15 +5,17 @@ import { play } from "./gomoku"
 import { githubCornerHTML } from "./lib/githubCorner"
 import * as packageInfo from "./package.json"
 
-const root = createRoot(document.getElementById("root"))
-root.render(<App />)
-
 let cornerDiv = document.createElement("div")
 cornerDiv.innerHTML = githubCornerHTML(
   packageInfo.repository.url,
   packageInfo.version,
 )
 document.body.appendChild(cornerDiv)
+
+let search = new URLSearchParams(location.search)
+
+let root = createRoot(document.getElementById("root"))
+root.render(<App />)
 
 function App() {
   let [turn, setTurn] = useState(1)
@@ -23,7 +25,7 @@ function App() {
   )
 
   useEffect(() => {
-    if (new URLSearchParams(location.search).has("aiplaysfirst")) {
+    if (search.has("aiplaysfirst") || search.has("aionly")) {
       aiplay(turn)
     }
   }, [])
@@ -48,6 +50,7 @@ function App() {
     }
 
     console.log(
+      turn,
       "potential",
       potential,
       "positionArray.length",
@@ -63,9 +66,12 @@ function App() {
       return
     } else {
       setTurn((3 - turn) as any)
-      // setTimeout(() => {
-      //   aiplay((3 - turn) as any)
-      // }, 0)
+      if (search.has("aionly")) {
+        let period = +(search.get("period") ?? 500)
+        setTimeout(() => {
+          aiplay((3 - turn) as any)
+        }, period)
+      }
     }
   }
 
