@@ -25,11 +25,23 @@ function App() {
   }
 
   function aiplay(turn: 1 | 2) {
-    let positionArray = play(turn, board)
-    if (positionArray === "gameover") {
+    let thePlay = play(turn, board)
+    if (thePlay === "gameover") {
       setGameStatus("Game Over")
       return
     }
+    let { potential, positionArray } = thePlay
+    if (potential < "0000000010") {
+      setGameStatus("Game Over")
+      return
+    }
+
+    console.log(
+      "potential",
+      potential,
+      "positionArray.length",
+      positionArray.length
+    )
     let position =
       positionArray[Math.floor(Math.random() * positionArray.length)]
     board[position.y][position.x] = 3 - turn
@@ -41,7 +53,7 @@ function App() {
     } else {
       setTimeout(() => {
         aiplay((3 - turn) as any)
-      }, 10)
+      }, 0)
     }
   }
 
