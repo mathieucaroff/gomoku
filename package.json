@@ -2,8 +2,10 @@
   "name": "gomoku",
   "version": "1.0.0",
   "license": "MIT",
+  "repository": {"url": "https://github.com/mathieucaroff/gomoku"},
   "scripts": {
-    "build": "parcel build index.html"
+    "build": "parcel build index.html",
+    "mcabuild": "parcel build index.html --public-url gomoku.d"
   },
   "devDependencies": {
     "parcel": "^2.6.2",

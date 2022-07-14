@@ -2,15 +2,24 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { createRoot } from "react-dom/client"
 import { play } from "./gomoku"
+import { githubCornerHTML } from "./lib/githubCorner"
+import * as packageInfo from "./package.json"
 
 const root = createRoot(document.getElementById("root"))
 root.render(<App />)
+
+let cornerDiv = document.createElement("div")
+cornerDiv.innerHTML = githubCornerHTML(
+  packageInfo.repository.url,
+  packageInfo.version,
+)
+document.body.appendChild(cornerDiv)
 
 function App() {
   let [turn, setTurn] = useState(1)
   let [gameStatus, setGameStatus] = useState("Playing")
   let [board, setBoard] = useState(
-    Array.from({ length: 19 }, () => Array.from({ length: 19 }, () => 0))
+    Array.from({ length: 19 }, () => Array.from({ length: 19 }, () => 0)),
   )
 
   useEffect(() => {
@@ -42,7 +51,7 @@ function App() {
       "potential",
       potential,
       "positionArray.length",
-      positionArray.length
+      positionArray.length,
     )
     let position =
       positionArray[Math.floor(Math.random() * positionArray.length)]
@@ -78,7 +87,7 @@ function App() {
       .querySelector<HTMLButtonElement>(
         `table tr:nth-of-type(${y + 1 + dy}) td:nth-of-type(${
           x + 1 + dx
-        }) button`
+        }) button`,
       )
       ?.focus?.()
   }

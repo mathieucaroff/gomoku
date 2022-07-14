@@ -1,9 +1,13 @@
-# Gomoku AI
+# [Gomoku AI](https://gomokuai.vercel.app/)
 
-```ts
-// A function which plays one piece
-(turn: 1 | 2, board: (0 | 1 | 2)[][]) => [number, number]
-```
+Play gomoku against an AI [by clicking this link](https://gomokuai.vercel.app/).
+
+## Alternative configurations
+
+- [You play first](https://gomokuai.vercel.app/)
+- [The AI plays first](https://gomokuai.vercel.app/?aiplaysfirst)
+
+## Principle
 
 The underlying principles of this AI are simple:
 

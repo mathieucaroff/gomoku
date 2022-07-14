@@ -14,7 +14,7 @@ function evaluate(
   x: number,
   y: number,
   dx: number,
-  dy: number
+  dy: number,
 ) {
   // determine the priority, between 0 and 9
   let priority
@@ -56,14 +56,14 @@ function evaluate(
 
 export function play(
   turn: 1 | 2,
-  board: Board
+  board: Board,
 ): { potential: string; positionArray: Position[] } | "gameover" {
   let gameoverRef = { current: false }
 
   // compute the potential grid
   // start from a grid of zeros
   let potentialGrid: PotentialGrid = board.map((row) =>
-    row.map(() => Array.from({ length: 10 }, () => 0))
+    row.map(() => Array.from({ length: 10 }, () => 0)),
   )
   // go through horizontals
   for (let y = 0, c = board.length; y < c; y++) {
