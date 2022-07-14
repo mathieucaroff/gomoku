@@ -38,14 +38,16 @@ function App() {
   }
 
   function aiplay(turn: 1 | 2) {
-    let thePlay = play(turn, board)
+    let thePlay = search.has("defensive")
+      ? play((3 - turn) as any, board)
+      : play(turn, board)
     if (thePlay === "gameover") {
-      setGameStatus("Game Over")
+      setGameStatus(`Game Over (player ${3 - turn} wins)`)
       return
     }
     let { potential, positionArray } = thePlay
     if (potential < "0000000010") {
-      setGameStatus("Game Over")
+      setGameStatus("Game Over (draw)")
       return
     }
 
@@ -62,7 +64,7 @@ function App() {
     setGameStatus(`Playing (${positionArray.length})`)
     setBoard(board.slice())
     if (play(turn, board) === "gameover") {
-      setGameStatus("Game Over")
+      setGameStatus(`Game Over (player ${turn} wins)`)
       return
     } else {
       setTurn((3 - turn) as any)
@@ -109,12 +111,12 @@ function App() {
                 return (
                   <td key={x}>
                     <button
-                      disabled={gameStatus === "Game Over"}
+                      disabled={gameStatus.startsWith("Game Over")}
                       className={`button button--${board[y][x]}`}
                       onClick={handleClick(x, y)}
                       onKeyDown={handleKeyDown(x, y)}
                     >
-                      {value}
+                      {value === 0 ? "" : value}
                     </button>
                   </td>
                 )
