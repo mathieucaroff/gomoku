@@ -54,7 +54,7 @@ function evaluate(
   }
 }
 
-export function play(turn: 1 | 2, board: Board): Position | "gameover" {
+export function play(turn: 1 | 2, board: Board): Position[] | "gameover" {
   let gameoverRef = { current: false }
 
   // compute the potential grid
@@ -64,25 +64,25 @@ export function play(turn: 1 | 2, board: Board): Position | "gameover" {
   )
   // go through horizontals
   for (let y = 0, c = board.length; y < c; y++) {
-    for (let x = 0, d = board[y].length - 5; x < d; x++) {
+    for (let x = 0, d = board[y].length - 4; x < d; x++) {
       evaluate(gameoverRef, turn, board, priorityGrid, x, y, 1, 0)
     }
   }
   // go through verticals
-  for (let y = 0, c = board.length - 5; y < c; y++) {
+  for (let y = 0, c = board.length - 4; y < c; y++) {
     for (let x = 0, d = board[y].length; x < d; x++) {
       evaluate(gameoverRef, turn, board, priorityGrid, x, y, 0, 1)
     }
   }
   // go through diagonals down-right
-  for (let y = 0, c = board.length - 5; y < c; y++) {
-    for (let x = 0, d = board[y].length - 5; x < d; x++) {
+  for (let y = 0, c = board.length - 4; y < c; y++) {
+    for (let x = 0, d = board[y].length - 4; x < d; x++) {
       evaluate(gameoverRef, turn, board, priorityGrid, x, y, 1, 1)
     }
   }
   // go through diagonals down-left
-  for (let y = 0, c = board.length - 5; y < c; y++) {
-    for (let x = 5, d = board[y].length; x < d; x++) {
+  for (let y = 0, c = board.length - 4; y < c; y++) {
+    for (let x = 4, d = board[y].length; x < d; x++) {
       evaluate(gameoverRef, turn, board, priorityGrid, x, y, -1, 1)
     }
   }
@@ -126,7 +126,7 @@ export function play(turn: 1 | 2, board: Board): Position | "gameover" {
         "bestArray",
         bestArray
       )
-      return bestArray[Math.floor(Math.random() * bestArray.length)]
+      return bestArray
     }
   }
 

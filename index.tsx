@@ -23,17 +23,23 @@ function App() {
       board[y][x] = turn
       aiplay()
       setBoard(board.slice())
-      // setTurn(3 - turn)
     }
   }
 
   function aiplay() {
-    let aiPosition = play((3 - turn) as any, board)
-    if (aiPosition === "gameover") {
+    let positionArray = play((3 - turn) as any, board)
+    if (positionArray === "gameover") {
       setGameStatus("Game Over")
       return
     }
-    board[aiPosition.y][aiPosition.x] = 3 - turn
+    setGameStatus(`Playing (${positionArray.length})`)
+    let position =
+      positionArray[Math.floor(Math.random() * positionArray.length)]
+    board[position.y][position.x] = 3 - turn
+    if (play(turn, board) === "gameover") {
+      setGameStatus("Game Over")
+      return
+    }
   }
 
   let handleKeyDown = (x: number, y: number) => (event: KeyboardEvent) => {
@@ -70,6 +76,7 @@ function App() {
                 return (
                   <td key={x}>
                     <button
+                      disabled={gameStatus === "Game Over"}
                       className={`button button--${board[y][x]}`}
                       onClick={handleClick(x, y)}
                       onKeyDown={handleKeyDown(x, y)}
