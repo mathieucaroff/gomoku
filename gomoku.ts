@@ -1,10 +1,10 @@
-interface Position {
+export interface Position {
   x: number
   y: number
 }
 
-type Board = (0 | 1 | 2)[][]
-type PotentialGrid = number[][][]
+export type Board = (0 | 1 | 2)[][]
+export type PotentialGrid = number[][][]
 
 function evaluate(
   gameoverRef: { current: boolean },
