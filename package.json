@@ -6,8 +6,8 @@
     "url": "https://github.com/mathieucaroff/gomoku"
   },
   "scripts": {
-    "build": "parcel build src/gomoku.html",
-    "mcabuild": "parcel build src/gomoku.html --public-url gomoku.d"
+    "build": "parcel build src/index.html",
+    "mcabuild": "parcel build src/index.html --public-url gomoku.d"
   },
   "devDependencies": {
     "@types/react": "^18.0.15",
