@@ -1,9 +1,9 @@
 import * as React from "react"
 import { KeyboardEvent, useState, useEffect } from "react"
 import { createRoot } from "react-dom/client"
-import { play, Board, Position } from "./gomoku"
+import { play, Board, Position } from "./gomokuAi"
 import { githubCornerHTML } from "./lib/githubCorner"
-import * as packageInfo from "./package.json"
+import * as packageInfo from "../package.json"
 
 let cornerDiv = document.createElement("div")
 cornerDiv.innerHTML = githubCornerHTML(
@@ -54,15 +54,6 @@ function App() {
       return
     }
 
-    if (positionArray.length > 1) {
-      console.log(
-        turn,
-        "potential",
-        potential,
-        "positionArray.length",
-        positionArray.length,
-      )
-    }
     let position =
       positionArray[Math.floor(Math.random() * positionArray.length)]
 
@@ -84,7 +75,7 @@ function App() {
     }
   }
 
-  let handleClick = (x: number, y: number) => () => {
+  let handlePlay = (x: number, y: number) => () => {
     let { playHistory } = state
     if (playHistory.every((position) => position.x !== x || position.y !== y)) {
       playHistory.push({ x, y })
@@ -174,7 +165,7 @@ function App() {
             ))}
           </tbody>
         </table>
-        <table>
+        <table className="board">
           <tbody>
             {getBoard(state.playHistory).map((row, y) => (
               <tr key={y}>
@@ -184,7 +175,7 @@ function App() {
                       <button
                         disabled={gameStatus.startsWith("Game Over")}
                         className={`button button--${value}`}
-                        onClick={handleClick(x, y)}
+                        onClick={handlePlay(x, y)}
                         onKeyDown={handleKeyDown(x, y)}
                       >
                         {value === 0 ? "" : value}
