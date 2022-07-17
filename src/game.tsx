@@ -5,7 +5,7 @@ import { play as gomokuAiPlay, Board, Position } from "./gomokuAi"
 import { githubCornerHTML } from "./lib/githubCorner"
 import * as packageInfo from "../package.json"
 
-type Versus = "human vs ai" | "ai vs human" | "human vs human" | "ai vs ai"
+type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
 let cornerDiv = document.createElement("div")
 cornerDiv.innerHTML = githubCornerHTML(
@@ -33,7 +33,8 @@ function getBoard(playHistory: Position[]) {
 
 function App() {
   let [state, setState] = useState({
-    versus: "human vs ai" as Versus,
+    versus: (urlSearch.get("versus") || "humanAi") as Versus,
+    timeout: +(urlSearch.get("timeout") ?? 500),
     playHistory: [] as Position[],
   })
 
@@ -41,9 +42,39 @@ function App() {
   let board = getBoard(state.playHistory)
   let recommendation = gomokuAiPlay(turn, board)
   let gameStatus =
-    recommendation === "gameover"
-      ? `Game Over, player ${3 - turn} won`
-      : `Player ${turn}'s turn`
+    recommendation === "gameover" ? (
+      <>
+        Game Over, player {<Button value={(3 - turn) as 1 | 2} />} won in{" "}
+        {state.playHistory.length} plays.
+      </>
+    ) : (
+      <>Player {<Button value={turn} />}'s turn</>
+    )
+
+  useEffect(() => {
+    if (
+      state.versus === "aiAi" ||
+      (state.versus === "humanAi" && turn === 2) ||
+      (state.versus === "aiHuman" && turn === 1)
+    ) {
+      setTimeout(() => {
+        let play = gomokuAiPlay(turn, board)
+        if (play !== "gameover") {
+          let { x, y } =
+            play.positionArray[
+              Math.floor(Math.random() * play.positionArray.length)
+            ]
+          state.playHistory.push({ x, y })
+          setState({ ...state })
+        }
+      }, state.timeout)
+    }
+  })
+
+  let handleVersusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setState({ ...state, versus: event.target.value as Versus })
+  }
+  let versusOptionArray: Versus[] = ["humanAi", "aiHuman", "humanHuman", "aiAi"]
 
   let handleKeyDown =
     (x: number, y: number) => (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -69,25 +100,58 @@ function App() {
         ?.focus?.()
     }
 
+  type ButtonProp = { position?: { x: number; y: number }; value: 0 | 1 | 2 }
+  function Button({ position, value }: ButtonProp) {
+    return (
+      <button
+        disabled={recommendation === "gameover"}
+        className={`button button--${value}`}
+        onClick={position && handlePlay(position.x, position.y)}
+        onKeyDown={position && handleKeyDown(position.x, position.y)}
+      >
+        {["", "X", "O"][value]}
+      </button>
+    )
+  }
+
   let handleGoBack = (time: number) => () => {
     state.playHistory = state.playHistory.slice(0, time)
     setState({ ...state })
   }
-  let handleReset = () => {}
-  let handlePlay = (x: number, y: number) => () => {
-    state.playHistory.push({ x, y })
-    setState({ ...state })
+  let handleReset = () => {
+    setState({ ...state, playHistory: [] })
   }
+  let handlePlay = (x: number, y: number) => () => {
+    if (board[y][x] === 0) {
+      state.playHistory.push({ x, y })
+      setState({ ...state })
+    }
+  }
+
+  let horizontalHeader = (
+    <tr>
+      <th></th>
+      {board.map((_, k) => (
+        <th>{(k + 10).toString(36).toUpperCase()}</th>
+      ))}
+      <th></th>
+    </tr>
+  )
 
   return (
     <>
+      Select a game mode:
+      <select onChange={handleVersusChange} value={state.versus}>
+        {versusOptionArray.map((value) => (
+          <option {...{ value }}>{value}</option>
+        ))}
+      </select>
       <p>
         {gameStatus}{" "}
         {recommendation === "gameover" ? (
           <button onClick={handleReset}>Reset</button>
         ) : null}
       </p>
-
       <div className="field">
         <table className="history">
           <thead>
@@ -109,7 +173,9 @@ function App() {
             {state.playHistory.map(({ x, y }, k) => (
               <tr key={k}>
                 <td>{k + 1}</td>
-                <td className={`player player--${(k % 2) + 1}`}></td>
+                <td>
+                  <Button value={((k % 2) + 1) as 1 | 2} />
+                </td>
                 <td>
                   {(x + 10).toString(36).toUpperCase()}
                   {y + 1}
@@ -122,15 +188,7 @@ function App() {
           </tbody>
         </table>
         <table className="board">
-          <thead>
-            <tr>
-              <th></th>
-              {board.map((_, k) => (
-                <th>{(k + 10).toString(36).toUpperCase()}</th>
-              ))}
-              <th></th>
-            </tr>
-          </thead>
+          <thead>{horizontalHeader}</thead>
           <tbody>
             {board.map((row, y) => (
               <tr key={y}>
@@ -138,27 +196,14 @@ function App() {
                 {row.map((value, x) => {
                   return (
                     <td key={x}>
-                      <button
-                        disabled={gameStatus.startsWith("Game Over")}
-                        className={`button button--${value}`}
-                        onClick={handlePlay(x, y)}
-                        onKeyDown={handleKeyDown(x, y)}
-                      >
-                        {value === 0 ? "" : value}
-                      </button>
+                      <Button value={value} position={{ x, y }} />
                     </td>
                   )
                 })}
                 <th>{y + 1}</th>
               </tr>
             ))}
-            <tr>
-              <th></th>
-              {board.map((_, k) => (
-                <th>{(k + 10).toString(36).toUpperCase()}</th>
-              ))}
-              <th></th>
-            </tr>
+            {horizontalHeader}
           </tbody>
         </table>
       </div>
