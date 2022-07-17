@@ -1,9 +1,11 @@
 import * as React from "react"
 import { KeyboardEvent, useState, useEffect } from "react"
 import { createRoot } from "react-dom/client"
-import { play, Board, Position } from "./gomokuAi"
+import { play as gomokuAiPlay, Board, Position } from "./gomokuAi"
 import { githubCornerHTML } from "./lib/githubCorner"
 import * as packageInfo from "../package.json"
+
+type Versus = "human vs ai" | "ai vs human" | "human vs human" | "ai vs ai"
 
 let cornerDiv = document.createElement("div")
 cornerDiv.innerHTML = githubCornerHTML(
@@ -12,7 +14,7 @@ cornerDiv.innerHTML = githubCornerHTML(
 )
 document.body.appendChild(cornerDiv)
 
-let search = new URLSearchParams(location.search)
+let urlSearch = new URLSearchParams(location.search)
 
 let root = createRoot(document.getElementById("root"))
 root.render(<App />)
@@ -30,59 +32,18 @@ function getBoard(playHistory: Position[]) {
 }
 
 function App() {
-  let [gameStatus, setGameStatus] = useState("Playing")
-  let [state, setState] = useState({ playHistory: [] as Position[] })
+  let [state, setState] = useState({
+    versus: "human vs ai" as Versus,
+    playHistory: [] as Position[],
+  })
 
-  useEffect(() => {
-    if (search.has("aiplaysfirst") || search.has("aionly")) {
-      aiplay(1)
-    }
-  }, [])
-
-  function aiplay(turn: 1 | 2) {
-    let board = getBoard(state.playHistory)
-    let thePlay = search.has("defensive")
-      ? play((3 - turn) as any, board)
-      : play(turn, board)
-    if (thePlay === "gameover") {
-      setGameStatus(`Game Over (player ${3 - turn} wins)`)
-      return
-    }
-    let { potential, positionArray } = thePlay
-    if (potential < "0000000010") {
-      setGameStatus("Game Over (draw)")
-      return
-    }
-
-    let position =
-      positionArray[Math.floor(Math.random() * positionArray.length)]
-
-    let { playHistory } = state
-    playHistory.push(position)
-    board[position.y][position.x] = turn
-    setState({ playHistory })
-    if (play(turn, board) === "gameover") {
-      setGameStatus(`Game Over (player ${turn} wins)`)
-      return
-    } else {
-      setGameStatus(`Playing (${positionArray.length})`)
-      if (search.has("aionly")) {
-        let period = +(search.get("period") ?? 500)
-        setTimeout(() => {
-          aiplay((3 - turn) as any)
-        }, period)
-      }
-    }
-  }
-
-  let handlePlay = (x: number, y: number) => () => {
-    let { playHistory } = state
-    if (playHistory.every((position) => position.x !== x || position.y !== y)) {
-      playHistory.push({ x, y })
-      setState({ playHistory })
-      aiplay(((state.playHistory.length % 2) + 1) as 1 | 2)
-    }
-  }
+  let turn = ((state.playHistory.length % 2) + 1) as 1 | 2
+  let board = getBoard(state.playHistory)
+  let recommendation = gomokuAiPlay(turn, board)
+  let gameStatus =
+    recommendation === "gameover"
+      ? `Game Over, player ${3 - turn} won`
+      : `Player ${turn}'s turn`
 
   let handleKeyDown =
     (x: number, y: number) => (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -108,27 +69,21 @@ function App() {
         ?.focus?.()
     }
 
-  let handleGoBack = (k: number) => () => {
-    let playHistory = state.playHistory.slice(0, k)
-    setState({ playHistory })
-    if (play(((k % 2) + 1) as 1 | 2, getBoard(playHistory)) === "gameover") {
-      setGameStatus(`Game Over (player ${(k % 2) + 1} wins)`)
-      return
-    } else {
-      setGameStatus(`Playing`)
-    }
+  let handleGoBack = (time: number) => () => {
+    state.playHistory = state.playHistory.slice(0, time)
+    setState({ ...state })
   }
-
-  let handleReset = () => {
-    setState({ playHistory: [] })
-    setGameStatus(`Playing`)
+  let handleReset = () => {}
+  let handlePlay = (x: number, y: number) => () => {
+    state.playHistory.push({ x, y })
+    setState({ ...state })
   }
 
   return (
     <>
       <p>
         {gameStatus}{" "}
-        {gameStatus.startsWith("Game Over") ? (
+        {recommendation === "gameover" ? (
           <button onClick={handleReset}>Reset</button>
         ) : null}
       </p>
@@ -139,7 +94,7 @@ function App() {
             <tr>
               <td>n°</td>
               <td></td>
-              <td>x, y</td>
+              <td>position</td>
               <td>
                 <button
                   onClick={handleGoBack(state.playHistory.length - 1)}
@@ -156,7 +111,8 @@ function App() {
                 <td>{k + 1}</td>
                 <td className={`player player--${(k % 2) + 1}`}></td>
                 <td>
-                  {x}, {y}
+                  {(x + 10).toString(36).toUpperCase()}
+                  {y + 1}
                 </td>
                 <td>
                   <button onClick={handleGoBack(k)}>go back</button>
@@ -166,9 +122,19 @@ function App() {
           </tbody>
         </table>
         <table className="board">
+          <thead>
+            <tr>
+              <th></th>
+              {board.map((_, k) => (
+                <th>{(k + 10).toString(36).toUpperCase()}</th>
+              ))}
+              <th></th>
+            </tr>
+          </thead>
           <tbody>
-            {getBoard(state.playHistory).map((row, y) => (
+            {board.map((row, y) => (
               <tr key={y}>
+                <th>{y + 1}</th>
                 {row.map((value, x) => {
                   return (
                     <td key={x}>
@@ -183,8 +149,16 @@ function App() {
                     </td>
                   )
                 })}
+                <th>{y + 1}</th>
               </tr>
             ))}
+            <tr>
+              <th></th>
+              {board.map((_, k) => (
+                <th>{(k + 10).toString(36).toUpperCase()}</th>
+              ))}
+              <th></th>
+            </tr>
           </tbody>
         </table>
       </div>
