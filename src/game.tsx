@@ -33,6 +33,7 @@ function getBoard(playHistory: Position[]) {
 
 function App() {
   let [state, setState] = useState({
+    defensive: urlSearch.get("defensive") !== null || false,
     versus: (urlSearch.get("versus") || "humanAi") as Versus,
     timeout: +(urlSearch.get("timeout") ?? 500),
     playHistory: [] as Position[],
@@ -58,7 +59,9 @@ function App() {
       (state.versus === "aiHuman" && turn === 1)
     ) {
       setTimeout(() => {
-        let play = gomokuAiPlay(turn, board)
+        let play = state.defensive
+          ? gomokuAiPlay((3 - turn) as 1 | 2, board)
+          : gomokuAiPlay(turn, board)
         if (play !== "gameover") {
           let { x, y } =
             play.positionArray[
