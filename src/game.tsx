@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client"
 import { play as gomokuAiPlay, Board, Position } from "./gomokuAi"
 import { githubCornerHTML } from "./lib/githubCorner"
 import * as packageInfo from "../package.json"
+import { exportGame, importGame } from "./exportImport"
 
 type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
@@ -37,6 +38,7 @@ function App() {
     versus: (urlSearch.get("versus") || "humanAi") as Versus,
     timeout: +(urlSearch.get("timeout") ?? 500),
     playHistory: [] as Position[],
+    importExportGame: "",
   })
 
   let turn = ((state.playHistory.length % 2) + 1) as 1 | 2
@@ -58,7 +60,7 @@ function App() {
       (state.versus === "humanAi" && turn === 2) ||
       (state.versus === "aiHuman" && turn === 1)
     ) {
-      setTimeout(() => {
+      let timer = setTimeout(() => {
         let play = state.defensive
           ? gomokuAiPlay((3 - turn) as 1 | 2, board)
           : gomokuAiPlay(turn, board)
@@ -67,17 +69,26 @@ function App() {
             play.positionArray[
               Math.floor(Math.random() * play.positionArray.length)
             ]
-          state.playHistory.push({ x, y })
-          setState({ ...state })
+          let { playHistory } = state
+          playHistory.push({ x, y })
+          setState({ ...state, importExportGame: exportGame(playHistory) })
         }
       }, state.timeout)
+      return () => {
+        clearTimeout(timer)
+      }
     }
   })
 
   let handleVersusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setState({ ...state, versus: event.target.value as Versus })
   }
-  let versusOptionArray: Versus[] = ["humanAi", "aiHuman", "humanHuman", "aiAi"]
+  let versusOptionArray: Record<Versus, string> = {
+    humanAi: "human vs ai",
+    aiHuman: "ai vs human",
+    humanHuman: "human vs human",
+    aiAi: "ai vs ai",
+  }
 
   let handleKeyDown =
     (x: number, y: number) => (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -118,16 +129,30 @@ function App() {
   }
 
   let handleGoBack = (time: number) => () => {
-    state.playHistory = state.playHistory.slice(0, time)
-    setState({ ...state })
+    let playHistory = state.playHistory.slice(0, time)
+    setState({
+      ...state,
+      playHistory,
+      importExportGame: exportGame(playHistory),
+    })
   }
   let handleReset = () => {
-    setState({ ...state, playHistory: [] })
+    let playHistory = []
+    setState({
+      ...state,
+      playHistory,
+      importExportGame: exportGame(playHistory),
+    })
   }
   let handlePlay = (x: number, y: number) => () => {
     if (board[y][x] === 0) {
-      state.playHistory.push({ x, y })
-      setState({ ...state })
+      let { playHistory } = state
+      playHistory.push({ x, y })
+      setState({
+        ...state,
+        playHistory,
+        importExportGame: exportGame(playHistory),
+      })
     }
   }
 
@@ -143,10 +168,10 @@ function App() {
 
   return (
     <>
-      Select a game mode:
+      Select a game mode:{" "}
       <select onChange={handleVersusChange} value={state.versus}>
-        {versusOptionArray.map((value) => (
-          <option {...{ value }}>{value}</option>
+        {Object.entries(versusOptionArray).map(([value, text]) => (
+          <option {...{ value }}>{text}</option>
         ))}
       </select>
       <p>
@@ -156,6 +181,34 @@ function App() {
         ) : null}
       </p>
       <div className="field">
+        <div>
+          <div>
+            <textarea
+              className="import-export"
+              rows={36}
+              cols={7}
+              value={state.importExportGame}
+              onChange={(event) => {
+                setState({ ...state, importExportGame: event.target.value })
+              }}
+            />
+          </div>
+          <div>
+            <button
+              onClick={() => {
+                setState({
+                  ...state,
+                  playHistory: importGame(state.importExportGame),
+                })
+              }}
+              disabled={
+                state.importExportGame === exportGame(state.playHistory)
+              }
+            >
+              Import game
+            </button>
+          </div>
+        </div>
         <table className="history">
           <thead>
             <tr>
