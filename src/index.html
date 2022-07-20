@@ -42,16 +42,29 @@
             border:none;
             border-collapse: collapse;
         }
+
+        /* History table */
         table.history {
             min-width: 180px;
         }
-        table.history td {
+        table.history th {
             padding-left: 2px;
             padding-right: 2px;
             border-bottom: black 1px solid;
         }
-        table.history td + td {
+        table.history td + td, table.history th + th {
             border-left: black 1px solid;
+        }
+        /* header width */
+        table.history th:nth-of-type(2) {
+            width: 124px;
+        }
+        table.history th:nth-of-type(3) {
+            width: 70px;
+        }
+        /* body width */
+        table.history td:nth-of-type(2), table.history td:nth-of-type(3) {
+            width: 60px;
         }
     </style>
     <script type="module" src="./game.tsx"></script>

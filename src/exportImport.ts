@@ -1,11 +1,10 @@
 import { Position } from "./gomokuAi"
+import { positionToString } from "./utils"
 
 export function exportGame(playHistory: Position[]): string {
   return playHistory
-    .map(({ x, y }, k) => {
-      return `${(x + 10).toString(36).toUpperCase()}${y + 1}${
-        k % 2 === 0 ? " " : "\n"
-      }`
+    .map((a, k) => {
+      return positionToString(a) + (k % 2 === 0 ? " " : "\n")
     })
     .join("")
 }

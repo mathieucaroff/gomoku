@@ -5,6 +5,7 @@ import { play as gomokuAiPlay, Board, Position } from "./gomokuAi"
 import { githubCornerHTML } from "./lib/githubCorner"
 import * as packageInfo from "../package.json"
 import { exportGame, importGame } from "./exportImport"
+import { pairs, positionToString } from "./utils"
 
 type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
@@ -48,7 +49,7 @@ function App() {
     recommendation === "gameover" ? (
       <>
         Game Over, player {<Button value={(3 - turn) as 1 | 2} />} won in{" "}
-        {state.playHistory.length} plays.
+        {Math.ceil(state.playHistory.length / 2)} plays.
       </>
     ) : (
       <>Player {<Button value={turn} />}'s turn</>
@@ -212,32 +213,36 @@ function App() {
         <table className="history">
           <thead>
             <tr>
-              <td>n°</td>
-              <td></td>
-              <td>position</td>
-              <td>
+              <th>n°</th>
+              <th colSpan={2}>position</th>
+              <th>
                 <button
                   onClick={handleGoBack(state.playHistory.length - 1)}
                   disabled={state.playHistory.length < 1}
                 >
                   undo one
                 </button>
-              </td>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {state.playHistory.map(({ x, y }, k) => (
+            {pairs(state.playHistory).map(([a, b], k) => (
               <tr key={k}>
                 <td>{k + 1}</td>
                 <td>
-                  <Button value={((k % 2) + 1) as 1 | 2} />
+                  <Button value={1} /> {positionToString(a)}
                 </td>
                 <td>
-                  {(x + 10).toString(36).toUpperCase()}
-                  {y + 1}
+                  {b ? (
+                    <>
+                      <Button value={2} /> {positionToString(b)}
+                    </>
+                  ) : (
+                    ""
+                  )}
                 </td>
                 <td>
-                  <button onClick={handleGoBack(k)}>go back</button>
+                  <button onClick={handleGoBack(2 * k)}>go back</button>
                 </td>
               </tr>
             ))}
