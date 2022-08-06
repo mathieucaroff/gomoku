@@ -1,11 +1,13 @@
 import * as React from "react"
 import { KeyboardEvent, useState, useEffect } from "react"
 import { createRoot } from "react-dom/client"
-import { play as gomokuAiPlay, Board, Position } from "./gomokuAi"
+import { getBestPlayArray, Board, Position } from "./gomokuAi"
 import { githubCornerHTML } from "./lib/githubCorner"
 import * as packageInfo from "../package.json"
 import { exportGame, importGame } from "./exportImport"
 import { pairs, positionToString } from "./utils"
+
+const gomokuAiPlay = getBestPlayArray
 
 type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
@@ -15,8 +17,6 @@ cornerDiv.innerHTML = githubCornerHTML(
   packageInfo.version,
 )
 document.body.appendChild(cornerDiv)
-
-let urlSearch = new URLSearchParams(location.search)
 
 let root = createRoot(document.getElementById("root"))
 root.render(<App />)
@@ -34,12 +34,15 @@ function getBoard(playHistory: Position[]) {
 }
 
 function App() {
-  let [state, setState] = useState({
-    defensive: urlSearch.get("defensive") !== null || false,
-    versus: (urlSearch.get("versus") || "humanAi") as Versus,
-    timeout: +(urlSearch.get("timeout") ?? 500),
-    playHistory: [] as Position[],
-    importExportGame: "",
+  let [state, setState] = useState(() => {
+    let urlSearch = new URLSearchParams(location.search)
+    return {
+      defensive: urlSearch.get("defensive") !== null || false,
+      versus: (urlSearch.get("versus") || "humanAi") as Versus,
+      timeout: +(urlSearch.get("timeout") ?? 500),
+      playHistory: [] as Position[],
+      importExportGame: "",
+    }
   })
 
   let turn = ((state.playHistory.length % 2) + 1) as 1 | 2
@@ -62,14 +65,11 @@ function App() {
       (state.versus === "aiHuman" && turn === 1)
     ) {
       let timer = setTimeout(() => {
-        let play = state.defensive
+        let playArray = state.defensive
           ? gomokuAiPlay((3 - turn) as 1 | 2, board)
           : gomokuAiPlay(turn, board)
-        if (play !== "gameover") {
-          let { x, y } =
-            play.positionArray[
-              Math.floor(Math.random() * play.positionArray.length)
-            ]
+        if (playArray !== "gameover") {
+          let { x, y } = playArray[Math.floor(Math.random() * playArray.length)]
           let { playHistory } = state
           playHistory.push({ x, y })
           setState({ ...state, importExportGame: exportGame(playHistory) })

@@ -6,7 +6,7 @@ export interface Position {
 export type Board = (0 | 1 | 2)[][]
 export type PotentialGrid = number[][][]
 
-function evaluate(
+function evaluatePosition(
   gameoverRef: { current: boolean },
   turn: 1 | 2,
   board: Board,
@@ -18,8 +18,8 @@ function evaluate(
 ) {
   // determine the priority, between 0 and 9
   let priority
-  let color = 0
-  let counter = 0
+  let color = 0 // The color of the current line, if any
+  let counter = 0 // The number of stones in the current li
   for (let k = 0; k < 5; k++) {
     let c = board[y + dy * k][x + dx * k]
     if (c > 0) {
@@ -54,41 +54,50 @@ function evaluate(
   }
 }
 
-export function play(
-  turn: 1 | 2,
+function evaluateGrid(
   board: Board,
-): { potential: string; positionArray: Position[] } | "gameover" {
-  let gameoverRef = { current: false }
-
-  // compute the potential grid
-  // start from a grid of zeros
+  gameoverRef: { current: boolean },
+  turn: 1 | 2,
+) {
   let potentialGrid: PotentialGrid = board.map((row) =>
     row.map(() => Array.from({ length: 10 }, () => 0)),
   )
   // go through horizontals
   for (let y = 0, c = board.length; y < c; y++) {
     for (let x = 0, d = board[y].length - 4; x < d; x++) {
-      evaluate(gameoverRef, turn, board, potentialGrid, x, y, 1, 0)
+      evaluatePosition(gameoverRef, turn, board, potentialGrid, x, y, 1, 0)
     }
   }
   // go through verticals
   for (let y = 0, c = board.length - 4; y < c; y++) {
     for (let x = 0, d = board[y].length; x < d; x++) {
-      evaluate(gameoverRef, turn, board, potentialGrid, x, y, 0, 1)
+      evaluatePosition(gameoverRef, turn, board, potentialGrid, x, y, 0, 1)
     }
   }
   // go through diagonals down-right
   for (let y = 0, c = board.length - 4; y < c; y++) {
     for (let x = 0, d = board[y].length - 4; x < d; x++) {
-      evaluate(gameoverRef, turn, board, potentialGrid, x, y, 1, 1)
+      evaluatePosition(gameoverRef, turn, board, potentialGrid, x, y, 1, 1)
     }
   }
   // go through diagonals down-left
   for (let y = 0, c = board.length - 4; y < c; y++) {
     for (let x = 4, d = board[y].length; x < d; x++) {
-      evaluate(gameoverRef, turn, board, potentialGrid, x, y, -1, 1)
+      evaluatePosition(gameoverRef, turn, board, potentialGrid, x, y, -1, 1)
     }
   }
+  return potentialGrid
+}
+
+export function getBestPlayArray(
+  turn: 1 | 2,
+  board: Board,
+): Position[] | "gameover" {
+  let gameoverRef = { current: false }
+
+  // compute the potential grid
+  // start from a grid of zeros
+  let potentialGrid: PotentialGrid = evaluateGrid(board, gameoverRef, turn)
 
   if (gameoverRef.current) {
     return "gameover"
@@ -121,7 +130,7 @@ export function play(
     }
   }
   if (bestArray.length > 0) {
-    return { potential: bestPotential, positionArray: bestArray }
+    return bestArray
   }
 
   return "gameover"
