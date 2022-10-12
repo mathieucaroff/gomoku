@@ -146,7 +146,11 @@ function App() {
     })
   }
   let handlePlay = (x: number, y: number) => () => {
-    if (board[y][x] === 0) {
+    let validVersus =
+      state.versus === "humanHuman" ||
+      (state.versus === "humanAi" && turn === 1) ||
+      (state.versus === "aiHuman" && turn === 2)
+    if (validVersus && board[y][x] === 0) {
       let { playHistory } = state
       playHistory.push({ x, y })
       setState({
@@ -197,9 +201,11 @@ function App() {
           <div>
             <button
               onClick={() => {
+                let ph = importGame(state.importExportGame)
+                console.log(ph)
                 setState({
                   ...state,
-                  playHistory: importGame(state.importExportGame),
+                  playHistory: ph,
                 })
               }}
               disabled={
