@@ -6,8 +6,8 @@ Play gomoku against an AI [by clicking this link](https://gomokuai.vercel.app/).
 
 - [You play first](https://gomokuai.vercel.app/)
 - [The AI plays first](https://gomokuai.vercel.app/?versus=aiHuman)
-- [Two AIs play against one another](https://gomokuai.vercel.app/?versus=aiAI)
-- [Two AIs play against one another but fast](https://gomokuai.vercel.app/?versus=aiAI&timeout=0)
+- [Two AIs play against one another](https://gomokuai.vercel.app/?versus=aiAi)
+- [Two AIs play against one another but fast](https://gomokuai.vercel.app/?versus=aiAi&timeout=0)
 - [You play first and the AI is too defensive](https://gomokuai.vercel.app/?defensive)
 
 ## Principle

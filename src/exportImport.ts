@@ -10,8 +10,11 @@ export function exportGame(playHistory: Position[]): string {
 }
 
 export function importGame(gameDescription: string): Position[] {
-  return gameDescription.split(/[\n ]/).map((line) => ({
-    x: parseInt(line[0], 36) - 10,
-    y: +line.slice(1) - 1,
-  }))
+  return gameDescription
+    .trim()
+    .split(/[\n ]/)
+    .map((line) => ({
+      x: parseInt(line[0], 36) - 10,
+      y: +line.slice(1) - 1,
+    }))
 }
