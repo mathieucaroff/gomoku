@@ -1,4 +1,4 @@
-import { Position } from "./gomokuAi"
+import { Position } from "./type"
 import { positionToString } from "./utils"
 
 export function exportGame(playHistory: Position[]): string {

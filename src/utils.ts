@@ -1,4 +1,4 @@
-import { Position } from "./gomokuAi"
+import { Position } from "./type"
 
 export function pairs<T>(array: T[]): [T, T][] {
   let result: [T, T][] = []

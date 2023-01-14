@@ -1,25 +1,13 @@
 import * as React from "react"
-import { KeyboardEvent, useState, useEffect } from "react"
-import { createRoot } from "react-dom/client"
-import { getBestPlayArray, Board, Position } from "./gomokuAi"
-import { githubCornerHTML } from "./lib/githubCorner"
-import * as packageInfo from "../package.json"
+import { KeyboardEvent, useEffect, useState } from "react"
+import { getBestPlayArray } from "./core/gomokuAi"
 import { exportGame, importGame } from "./exportImport"
+import { Board, Position } from "./type"
 import { pairs, positionToString } from "./utils"
 
 const gomokuAiPlay = getBestPlayArray
 
 type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
-
-let cornerDiv = document.createElement("div")
-cornerDiv.innerHTML = githubCornerHTML(
-  packageInfo.repository.url,
-  packageInfo.version,
-)
-document.body.appendChild(cornerDiv)
-
-let root = createRoot(document.getElementById("root"))
-root.render(<App />)
 
 function getBoard(playHistory: Position[]) {
   let board: Board = Array.from({ length: 19 }, () =>
@@ -33,7 +21,7 @@ function getBoard(playHistory: Position[]) {
   return board
 }
 
-function App() {
+export function Game() {
   let [state, setState] = useState(() => {
     let urlSearch = new URLSearchParams(location.search)
     return {
@@ -55,7 +43,7 @@ function App() {
         {Math.ceil(state.playHistory.length / 2)} plays.
       </>
     ) : (
-      <>Player {<Button value={turn} />}'s turn</>
+      <>It's player {<Button value={turn} />}'s turn</>
     )
 
   useEffect(() => {
@@ -165,7 +153,7 @@ function App() {
     <tr>
       <th></th>
       {board.map((_, k) => (
-        <th>{(k + 10).toString(36).toUpperCase()}</th>
+        <th key={k}>{(k + 10).toString(36).toUpperCase()}</th>
       ))}
       <th></th>
     </tr>
@@ -173,87 +161,106 @@ function App() {
 
   return (
     <>
-      Select a game mode:{" "}
-      <select onChange={handleVersusChange} value={state.versus}>
-        {Object.entries(versusOptionArray).map(([value, text]) => (
-          <option {...{ value }}>{text}</option>
-        ))}
-      </select>
-      <p>
-        {gameStatus}{" "}
-        {recommendation === "gameover" ? (
-          <button onClick={handleReset}>Reset</button>
-        ) : null}
-      </p>
       <div className="field">
-        <div>
-          <div>
-            <textarea
-              className="import-export"
-              rows={36}
-              cols={7}
-              value={state.importExportGame}
-              onChange={(event) => {
-                setState({ ...state, importExportGame: event.target.value })
-              }}
-            />
+        <div className="general-info">
+          <div className="info">
+            <h1>Gomoku</h1>
+            <p style={{ maxWidth: "300px" }}>
+              Fill a row, a column or a diagonal of five consecutive squares of
+              your color to win.
+            </p>
+            Select a game mode:{" "}
+            <select onChange={handleVersusChange} value={state.versus}>
+              {Object.entries(versusOptionArray).map(([value, text]) => (
+                <option {...{ value, key: value }}>{text}</option>
+              ))}
+            </select>
+            <p>
+              {gameStatus}{" "}
+              {recommendation === "gameover" ? (
+                <button onClick={handleReset}>Reset</button>
+              ) : null}
+            </p>
           </div>
-          <div>
-            <button
-              onClick={() => {
-                let ph = importGame(state.importExportGame)
-                console.log(ph)
-                setState({
-                  ...state,
-                  playHistory: ph,
-                })
-              }}
-              disabled={
-                state.importExportGame === exportGame(state.playHistory)
-              }
-            >
-              Import game
-            </button>
+          <div className="field">
+            <div className="import-export">
+              <div>
+                <textarea
+                  rows={36}
+                  cols={7}
+                  value={state.importExportGame}
+                  onChange={(event) => {
+                    setState({ ...state, importExportGame: event.target.value })
+                  }}
+                />
+              </div>
+              <div>
+                <button
+                  onClick={() => {
+                    let ph = importGame(state.importExportGame)
+                    console.log(ph)
+                    setState({
+                      ...state,
+                      playHistory: ph,
+                    })
+                  }}
+                  disabled={
+                    state.importExportGame === exportGame(state.playHistory)
+                  }
+                >
+                  Import game
+                </button>
+              </div>
+            </div>
+            <table className="history">
+              <colgroup>
+                <col span={1} style={{ width: "5%" }} />
+                <col span={1} style={{ width: "40%" }} />
+                <col span={1} style={{ width: "6%" }} />
+                <col span={1} style={{ width: "40%" }} />
+                <col span={1} style={{ width: "6%" }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>n°</th>
+                  <th colSpan={4}>play</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pairs(state.playHistory).map(([a, b], k) => (
+                  <tr key={k}>
+                    <td>{k + 1}</td>
+                    <td>
+                      <Button value={1} /> {positionToString(a)}
+                    </td>
+                    <td>
+                      <button title="go back" onClick={handleGoBack(2 * k)}>
+                        ⮌
+                      </button>
+                    </td>
+                    {b ? (
+                      <>
+                        <td>
+                          <Button value={2} /> {positionToString(b)}
+                        </td>
+                        <td>
+                          <button
+                            title="go back"
+                            onClick={handleGoBack(2 * k + 1)}
+                          >
+                            ⮌
+                          </button>
+                        </td>
+                      </>
+                    ) : (
+                      ""
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-        <table className="history">
-          <thead>
-            <tr>
-              <th>n°</th>
-              <th colSpan={2}>position</th>
-              <th>
-                <button
-                  onClick={handleGoBack(state.playHistory.length - 1)}
-                  disabled={state.playHistory.length < 1}
-                >
-                  undo one
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {pairs(state.playHistory).map(([a, b], k) => (
-              <tr key={k}>
-                <td>{k + 1}</td>
-                <td>
-                  <Button value={1} /> {positionToString(a)}
-                </td>
-                <td>
-                  {b ? (
-                    <>
-                      <Button value={2} /> {positionToString(b)}
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </td>
-                <td>
-                  <button onClick={handleGoBack(2 * k)}>go back</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
         <table className="board">
           <thead>{horizontalHeader}</thead>
           <tbody>

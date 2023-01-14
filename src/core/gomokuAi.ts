@@ -1,10 +1,6 @@
-export interface Position {
-  x: number
-  y: number
-}
+import { Board, Position } from "../type"
 
-export type Board = (0 | 1 | 2)[][]
-export type PotentialGrid = number[][][]
+type PotentialGrid = number[][][]
 
 function evaluatePosition(
   gameoverRef: { current: boolean },
