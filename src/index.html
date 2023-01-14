@@ -23,6 +23,22 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
+        /* dark theme */
+        html.dark {
+            --first-color: #007692;
+            --second-color: #cc6600;
+            background-color: #181a1b;
+            color: white;
+        }
+        html.dark button, html.dark textarea, html.dark select {
+            background-color: #181a1b;
+            border-top-color: #736b5e;
+            border-left-color: #736b5e;
+            border-right-color: #4c473e;
+            border-bottom-color: #4c473e;
+            color: white;
+        }
+
         div.field {
             display: flex;
             align-items: flex-start;
@@ -32,10 +48,10 @@
             height: 24px;
             border-radius: 10px;
         }
-        .button--1 {
+        .button--1, html.dark .button--1 {
             background-color: var(--first-color);
         }
-        .button--2 {
+        .button--2, html.dark .button--2 {
             background-color: var(--second-color);
         }
         table {
@@ -55,6 +71,12 @@
         }
         table.history td + td, table.history th + th {
             border-left: black 1px solid;
+        }
+        html.dark table.history th {
+            border-bottom-color: grey;
+        }
+        html.dark table.history td + td, html.dark table.history th + th {
+            border-left-color: grey;
         }
         /* header width */
         table.history th:nth-of-type(2) {

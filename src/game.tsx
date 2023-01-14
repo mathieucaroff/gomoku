@@ -79,6 +79,14 @@ export function Game() {
     aiAi: "ai vs ai",
   }
 
+  let handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (event.target.value === "dark") {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }
+
   let handleKeyDown =
     (x: number, y: number) => (event: KeyboardEvent<HTMLButtonElement>) => {
       let dx = 0
@@ -169,12 +177,21 @@ export function Game() {
               Fill a row, a column or a diagonal of five consecutive squares of
               your color to win.
             </p>
-            Select a game mode:{" "}
-            <select onChange={handleVersusChange} value={state.versus}>
-              {Object.entries(versusOptionArray).map(([value, text]) => (
-                <option {...{ value, key: value }}>{text}</option>
-              ))}
-            </select>
+            <div>
+              Game mode:{" "}
+              <select onChange={handleVersusChange} value={state.versus}>
+                {Object.entries(versusOptionArray).map(([value, text]) => (
+                  <option {...{ value, key: value }}>{text}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              Theme:{" "}
+              <select onChange={handleThemeChange}>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
             <p>
               {gameStatus}{" "}
               {recommendation === "gameover" ? (
