@@ -1,14 +1,13 @@
 import * as React from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
+import { Modal } from "./components/Modal/Modal"
 import { getBestPlayArray } from "./core/gomokuAi"
 import { exportGame, importGame } from "./exportImport"
-import { setLocationHash } from "./lib/setLocationHash"
+import { GomokuConfig, Versus } from "./main"
 import { Board, Position } from "./type"
 import { pairs, positionToString } from "./utils"
 
 const gomokuAiPlay = getBestPlayArray
-
-type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
 function getBoard(playHistory: Position[]) {
   let board: Board = Array.from({ length: 19 }, () =>
@@ -22,18 +21,23 @@ function getBoard(playHistory: Position[]) {
   return board
 }
 
-export function Game() {
+export function Game(prop: { config: GomokuConfig }) {
+  let { config } = prop
   let [state, setState] = useState(() => {
-    let urlSearch = new URLSearchParams(location.search)
     return {
-      defensive: urlSearch.get("defensive") !== null || false,
-      versus: (urlSearch.get("versus") || "humanAi") as Versus,
-      timeout: +(urlSearch.get("timeout") ?? 500),
+      dark: config.dark,
+      versus: config.versus,
       playHistory: [] as Position[],
       importExportGame: "",
       importError: "",
     }
   })
+
+  if (state.dark) {
+    document.documentElement.classList.add("dark")
+  } else {
+    document.documentElement.classList.remove("dark")
+  }
 
   let turn = ((state.playHistory.length % 2) + 1) as 1 | 2
   let board = getBoard(state.playHistory)
@@ -55,7 +59,7 @@ export function Game() {
       (state.versus === "aiHuman" && turn === 1)
     ) {
       let timer = setTimeout(() => {
-        let playArray = state.defensive
+        let playArray = config.defensive
           ? gomokuAiPlay((3 - turn) as 1 | 2, board)
           : gomokuAiPlay(turn, board)
         if (playArray !== "gameover") {
@@ -64,7 +68,7 @@ export function Game() {
           playHistory.push({ x, y })
           setState({ ...state, importExportGame: exportGame(playHistory) })
         }
-      }, state.timeout)
+      }, config.timeout)
       return () => {
         clearTimeout(timer)
       }
@@ -83,9 +87,9 @@ export function Game() {
 
   let handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (event.target.value === "dark") {
-      setLocationHash(location, { dark: true }, [], {})
+      setState({ ...state, dark: true })
     } else {
-      setLocationHash(location, {}, ["dark"], {})
+      setState({ ...state, dark: false })
     }
   }
 
@@ -112,17 +116,6 @@ export function Game() {
         )
         ?.focus?.()
     }
-
-  let init = () => {
-    if (location.hash.match(/#dark($|#)/)) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }
-  init()
-
-  window.addEventListener("hashchange", () => init())
 
   type ButtonProp = { position?: { x: number; y: number }; value: 0 | 1 | 2 }
   function Button({ position, value }: ButtonProp) {
@@ -208,6 +201,9 @@ export function Game() {
                 <option value="dark">Dark</option>
               </select>
             </div>
+            {recommendation === "gameover" && (
+              <Modal className="game-status-modal">{gameStatus}</Modal>
+            )}
             <p>
               {gameStatus}{" "}
               {recommendation === "gameover" ? (
