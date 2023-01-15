@@ -30,6 +30,7 @@ export function Game() {
       timeout: +(urlSearch.get("timeout") ?? 500),
       playHistory: [] as Position[],
       importExportGame: "",
+      importError: "",
     }
   })
 
@@ -131,14 +132,16 @@ export function Game() {
       ...state,
       playHistory,
       importExportGame: exportGame(playHistory),
+      importError: "",
     })
   }
-  let handleReset = () => {
+  let handlePlayAgain = () => {
     let playHistory = []
     setState({
       ...state,
       playHistory,
       importExportGame: exportGame(playHistory),
+      importError: "",
     })
   }
   let handlePlay = (x: number, y: number) => () => {
@@ -153,6 +156,7 @@ export function Game() {
         ...state,
         playHistory,
         importExportGame: exportGame(playHistory),
+        importError: "",
       })
     }
   }
@@ -195,9 +199,10 @@ export function Game() {
             <p>
               {gameStatus}{" "}
               {recommendation === "gameover" ? (
-                <button onClick={handleReset}>Reset</button>
+                <button onClick={handlePlayAgain}>Play again</button>
               ) : null}
             </p>
+            <p style={{ color: "red" }}>{state.importError}</p>
           </div>
           <div className="field">
             <div className="import-export">
@@ -214,12 +219,19 @@ export function Game() {
               <div>
                 <button
                   onClick={() => {
-                    let ph = importGame(state.importExportGame)
-                    console.log(ph)
-                    setState({
-                      ...state,
-                      playHistory: ph,
-                    })
+                    try {
+                      let playHistory = importGame(state.importExportGame)
+                      setState({
+                        ...state,
+                        playHistory,
+                        importError: "",
+                      })
+                    } catch (e) {
+                      setState({
+                        ...state,
+                        importError: e.message,
+                      })
+                    }
                   }}
                   disabled={
                     state.importExportGame === exportGame(state.playHistory)
