@@ -2,6 +2,7 @@ import * as React from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
 import { getBestPlayArray } from "./core/gomokuAi"
 import { exportGame, importGame } from "./exportImport"
+import { setLocationHash } from "./lib/setLocationHash"
 import { Board, Position } from "./type"
 import { pairs, positionToString } from "./utils"
 
@@ -82,9 +83,9 @@ export function Game() {
 
   let handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (event.target.value === "dark") {
-      document.documentElement.classList.add("dark")
+      setLocationHash(location, { dark: true }, [], {})
     } else {
-      document.documentElement.classList.remove("dark")
+      setLocationHash(location, {}, ["dark"], {})
     }
   }
 
@@ -111,6 +112,17 @@ export function Game() {
         )
         ?.focus?.()
     }
+
+  let init = () => {
+    if (location.hash.match(/#dark($|#)/)) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }
+  init()
+
+  window.addEventListener("hashchange", () => init())
 
   type ButtonProp = { position?: { x: number; y: number }; value: 0 | 1 | 2 }
   function Button({ position, value }: ButtonProp) {
