@@ -9,14 +9,15 @@ export type ButtonProp = {
     position: Position,
   ) => (event: React.KeyboardEvent<HTMLButtonElement>) => void
   disabled?: boolean
+  className?: string
 }
 
 export function Square(props: ButtonProp) {
-  let { position, value, disabled, onClick, onKeyDown } = props
+  let { className, position, value, disabled, onClick, onKeyDown } = props
   return (
     <button
       disabled={disabled}
-      className={`square square--${value}`}
+      className={`square square--${value} ${className ?? ""}`}
       onClick={position && onClick?.(position)}
       onKeyDown={position && onKeyDown?.(position)}
     >

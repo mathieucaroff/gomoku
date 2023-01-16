@@ -16,6 +16,7 @@ export interface GomokuConfig {
   timeout: number
   dark: boolean
   playerColors: string
+  highlightColor: string
 }
 
 function getConfig(location: Location) {
@@ -25,6 +26,7 @@ function getConfig(location: Location) {
     timeout: () => 500,
     dark: () => false,
     playerColors: ({ dark }) => (dark() ? "007692:cc6600" : "60E0FF:FF8000"),
+    highlightColor: ({ dark }) => (dark() ? "880088" : "ffff00"),
   })
   return config
 }
@@ -49,6 +51,7 @@ function main() {
     html, html.dark {
       --first-color: #${playerOneColor};
       --second-color: #${playerTwoColor};
+      --hightlight-color: #${config.highlightColor}
     }
   `)
   root.render(React.createElement(Game, { config }))

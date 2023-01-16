@@ -99,6 +99,9 @@ table.board .square {
     height: calc(min(4.7svh, 4.7svw) - 2px);
     border-radius: 999px;
 }
+table.board .square--highlight {
+    background-color: var(--hightlight-color);
+}
 
 .game-status-modal button {
     min-width: 50px;

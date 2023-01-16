@@ -299,12 +299,18 @@ export function Game(prop: { config: GomokuConfig }) {
               <tr key={y}>
                 <th>{y + 1}</th>
                 {row.map((value, x) => {
+                  let lastPlay = state.playHistory.slice(-1)[0] ?? {}
                   return (
                     <td key={x}>
                       <Square
                         onClick={handlePlay}
                         onKeyDown={handleKeyDown}
                         disabled={squareDisabled}
+                        className={
+                          lastPlay.x === x && lastPlay.y === y
+                            ? "square--highlight"
+                            : ""
+                        }
                         value={value}
                         position={{ x, y }}
                       />
