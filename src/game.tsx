@@ -22,8 +22,11 @@ function getBoard(playHistory: Position[]) {
   return board
 }
 
-export function Game(prop: { config: GomokuConfig }) {
-  let { config } = prop
+export function Game(prop: {
+  config: GomokuConfig
+  styleSheet: CSSStyleSheet
+}) {
+  let { config, styleSheet } = prop
   let [state, setState] = useState(() => {
     return {
       dark: config.dark,
@@ -33,6 +36,24 @@ export function Game(prop: { config: GomokuConfig }) {
       importError: "",
     }
   })
+
+  React.useLayoutEffect(() => {
+    let [playerOneColor, playerTwoColor] = config.playerColors.split(":")
+    let { highlightColor } = config
+
+    console.log("styleSheet", styleSheet)
+
+    styleSheet.deleteRule(0)
+    styleSheet.insertRule(`
+    html, html.dark {
+      --first-color: #${playerOneColor || (state.dark ? "007692" : "60E0FF")};
+      --second-color: #${playerTwoColor || (state.dark ? "FF8000" : "cc6600")};
+      --hightlight-color: #${
+        highlightColor || (state.dark ? "880088" : "FFFF00")
+      };
+    }
+  `)
+  }, [state.dark])
 
   if (state.dark) {
     document.documentElement.classList.add("dark")
@@ -46,7 +67,7 @@ export function Game(prop: { config: GomokuConfig }) {
   let gameStatus =
     recommendation === "gameover" ? (
       <>
-        Game Over, player {<Square value={(3 - turn) as 1 | 2} />} won in{" "}
+        Game Over, player {<Square value={(3 - turn) as 1 | 2} />} wins in{" "}
         {Math.ceil(state.playHistory.length / 2)} plays.
       </>
     ) : (
@@ -196,7 +217,18 @@ export function Game(prop: { config: GomokuConfig }) {
               </select>
             </div>
             {recommendation === "gameover" && (
-              <Modal className="game-status-modal">{gameStatus}</Modal>
+              <Modal className="game-status-modal">
+                {state.versus === "humanHuman" || state.versus === "aiAi" ? (
+                  <>
+                    Player {<Square value={(3 - turn) as 1 | 2} />} wins in{" "}
+                    {Math.ceil(state.playHistory.length / 2)} plays
+                  </>
+                ) : state.versus === "humanAi" && turn === 2 ? (
+                  "Victory!"
+                ) : (
+                  "Defeat!"
+                )}
+              </Modal>
             )}
             <p>
               {gameStatus}{" "}

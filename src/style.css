@@ -1,8 +1,9 @@
 :root {
     /* Note: these CSS variables are now obtained form the configuration and
        dynamically inserted */
-    /* --first-color: #60E0FF;
-    --second-color: #FF8000; */
+    --first-color: #60E0FF;
+    --second-color: #FF8000;
+    --hightlight-color: #FFFF00;
 
     --foreground-color: #000000;
     --background-color: #FFFFFF;
@@ -18,6 +19,7 @@ html {
 html.dark {
     --first-color: #007692;
     --second-color: #cc6600;
+    --hightlight-color: #880088;
 
     --foreground-color: #FFFFFF;
     --background-color: #181a1b;
@@ -104,8 +106,8 @@ table.board .square--highlight {
 }
 
 .game-status-modal button {
-    min-width: 50px;
-    min-height: 50px;
+    min-width: 45px;
+    min-height: 45px;
 }
 
 .game-status-modal {
