@@ -31,15 +31,15 @@ div.field {
     display: flex;
     align-items: flex-start;
 }
-.button {
+.square {
     width: 24px;
     height: 24px;
     border-radius: 9999px;
 }
-.button--1, html.dark .button--1 {
+.square--1, html.dark .square--1 {
     background-color: var(--first-color);
 }
-.button--2, html.dark .button--2 {
+.square--2, html.dark .square--2 {
     background-color: var(--second-color);
 }
 table {
@@ -90,7 +90,7 @@ table.board {
 table.board td {
     line-height: 0;
 }
-table.board .button {
+table.board .square {
     width: calc(min(4.7svh, 4.7svw) - 2px);
     height: calc(min(4.7svh, 4.7svw) - 2px);
     border-radius: 999px;

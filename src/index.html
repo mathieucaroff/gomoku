@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Gomoku</title>
+    <script>
+        // Add the tag "dark" class right at the beginning of the loading of the
+        // page to avoid a white flash.
+        if (location.search.slice(1).split("&").includes("dark")) {
+            document.documentElement.classList.add("dark")
+        }
+    </script>
 </head>
 <body>
     <div id="root">

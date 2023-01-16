@@ -1,6 +1,7 @@
 import * as React from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
 import { Modal } from "./components/Modal/Modal"
+import { Square } from "./components/Square/Square"
 import { getBestPlayArray } from "./core/gomokuAi"
 import { exportGame, importGame } from "./exportImport"
 import { GomokuConfig, Versus } from "./main"
@@ -45,11 +46,11 @@ export function Game(prop: { config: GomokuConfig }) {
   let gameStatus =
     recommendation === "gameover" ? (
       <>
-        Game Over, player {<Button value={(3 - turn) as 1 | 2} />} won in{" "}
+        Game Over, player {<Square value={(3 - turn) as 1 | 2} />} won in{" "}
         {Math.ceil(state.playHistory.length / 2)} plays.
       </>
     ) : (
-      <>It's player {<Button value={turn} />}'s turn</>
+      <>It's player {<Square value={turn} />}'s turn</>
     )
 
   useEffect(() => {
@@ -94,7 +95,8 @@ export function Game(prop: { config: GomokuConfig }) {
   }
 
   let handleKeyDown =
-    (x: number, y: number) => (event: KeyboardEvent<HTMLButtonElement>) => {
+    (position: Position) => (event: KeyboardEvent<HTMLButtonElement>) => {
+      let { x, y } = position
       let dx = 0
       let dy = 0
       if (event.code === "ArrowLeft") {
@@ -108,28 +110,17 @@ export function Game(prop: { config: GomokuConfig }) {
       } else {
         return
       }
+
+      event.preventDefault()
+
       document
         .querySelector<HTMLButtonElement>(
-          `table tr:nth-of-type(${y + 1 + dy}) td:nth-of-type(${
+          `.board tr:nth-of-type(${y + 1 + dy}) td:nth-of-type(${
             x + 1 + dx
           }) button`,
         )
         ?.focus?.()
     }
-
-  type ButtonProp = { position?: { x: number; y: number }; value: 0 | 1 | 2 }
-  function Button({ position, value }: ButtonProp) {
-    return (
-      <button
-        disabled={recommendation === "gameover"}
-        className={`button button--${value}`}
-        onClick={position && handlePlay(position.x, position.y)}
-        onKeyDown={position && handleKeyDown(position.x, position.y)}
-      >
-        {["", "X", "O"][value]}
-      </button>
-    )
-  }
 
   let handleGoBack = (time: number) => () => {
     let playHistory = state.playHistory.slice(0, time)
@@ -149,7 +140,8 @@ export function Game(prop: { config: GomokuConfig }) {
       importError: "",
     })
   }
-  let handlePlay = (x: number, y: number) => () => {
+  let handlePlay = (position: Position) => () => {
+    let { x, y } = position
     let validVersus =
       state.versus === "humanHuman" ||
       (state.versus === "humanAi" && turn === 1) ||
@@ -165,6 +157,8 @@ export function Game(prop: { config: GomokuConfig }) {
       })
     }
   }
+
+  let squareDisabled = recommendation === "gameover"
 
   let horizontalHeader = (
     <tr>
@@ -268,7 +262,7 @@ export function Game(prop: { config: GomokuConfig }) {
                   <tr key={k}>
                     <td>{k + 1}</td>
                     <td>
-                      <Button value={1} /> {positionToString(a)}
+                      <Square value={1} /> {positionToString(a)}
                     </td>
                     <td>
                       <button title="go back" onClick={handleGoBack(2 * k)}>
@@ -278,7 +272,7 @@ export function Game(prop: { config: GomokuConfig }) {
                     {b ? (
                       <>
                         <td>
-                          <Button value={2} /> {positionToString(b)}
+                          <Square value={2} /> {positionToString(b)}
                         </td>
                         <td>
                           <button
@@ -307,7 +301,13 @@ export function Game(prop: { config: GomokuConfig }) {
                 {row.map((value, x) => {
                   return (
                     <td key={x}>
-                      <Button value={value} position={{ x, y }} />
+                      <Square
+                        onClick={handlePlay}
+                        onKeyDown={handleKeyDown}
+                        disabled={squareDisabled}
+                        value={value}
+                        position={{ x, y }}
+                      />
                     </td>
                   )
                 })}

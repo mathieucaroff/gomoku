@@ -6,6 +6,7 @@
     "url": "https://github.com/mathieucaroff/gomoku"
   },
   "scripts": {
+    "dev": "parcel src/index.html",
     "build": "parcel build src/index.html",
     "mcabuild": "parcel build src/index.html --public-url gomoku.d"
   },
