@@ -17,6 +17,7 @@ export interface GomokuConfig {
   dark: boolean
   playerColors: string
   highlightColor: string
+  game: string
 }
 
 function getConfig(location: Location) {
@@ -27,6 +28,7 @@ function getConfig(location: Location) {
     dark: () => false,
     playerColors: ({ dark }) => (dark() ? "007692:cc6600" : "60E0FF:FF8000"),
     highlightColor: ({ dark }) => (dark() ? "880088" : "ffff00"),
+    game: () => "",
   })
   return config
 }

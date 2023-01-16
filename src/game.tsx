@@ -28,7 +28,7 @@ export function Game(prop: { config: GomokuConfig }) {
     return {
       dark: config.dark,
       versus: config.versus,
-      playHistory: [] as Position[],
+      playHistory: importGame(config.game),
       importExportGame: "",
       importError: "",
     }
