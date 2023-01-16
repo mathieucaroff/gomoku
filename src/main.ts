@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import * as packageInfo from "../package.json"
 import { Game } from "./game"
 import { githubCornerHTML } from "./lib/githubCorner"
+import { createStyleSheet } from "./lib/stylesheet"
 import { ensureSpacelessURL, resolveSearch } from "./lib/urlParameter"
 
 import "./style.css"
@@ -14,6 +15,7 @@ export interface GomokuConfig {
   versus: Versus
   timeout: number
   dark: boolean
+  playerColors: string
 }
 
 function getConfig(location: Location) {
@@ -22,6 +24,7 @@ function getConfig(location: Location) {
     versus: () => "humanAi" as Versus,
     timeout: () => 500,
     dark: () => false,
+    playerColors: ({ dark }) => (dark() ? "007692:cc6600" : "60E0FF:FF8000"),
   })
   return config
 }
@@ -39,6 +42,15 @@ function main() {
   let root = createRoot(document.getElementById("root"))
   let config = getConfig(location)
   console.log(config)
+
+  let styleSheet = createStyleSheet(document)
+  let [playerOneColor, playerTwoColor] = config.playerColors.split(":")
+  styleSheet.insertRule(`
+    html, html.dark {
+      --first-color: #${playerOneColor};
+      --second-color: #${playerTwoColor};
+    }
+  `)
   root.render(React.createElement(Game, { config }))
 }
 main()
