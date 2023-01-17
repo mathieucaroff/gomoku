@@ -39,18 +39,16 @@ export function Game(prop: {
 
   React.useLayoutEffect(() => {
     let [playerOneColor, playerTwoColor] = config.playerColors.split(":")
-    let { highlightColor } = config
-
-    console.log("styleSheet", styleSheet)
+    let [playerOneHighlightColor, playerTwoHighlightColor] =
+      config.highlightColors.split(":")
 
     styleSheet.deleteRule(0)
     styleSheet.insertRule(`
     html, html.dark {
       --first-color: #${playerOneColor || (state.dark ? "007692" : "60E0FF")};
+      --first-hightlight-color: #${playerOneHighlightColor};
       --second-color: #${playerTwoColor || (state.dark ? "FF8000" : "cc6600")};
-      --hightlight-color: #${
-        highlightColor || (state.dark ? "880088" : "FFFF00")
-      };
+      --second-hightlight-color: #${playerTwoHighlightColor};
     }
   `)
   }, [state.dark])
@@ -68,7 +66,7 @@ export function Game(prop: {
     recommendation === "gameover" ? (
       <>
         Game Over, player {<Square value={(3 - turn) as 1 | 2} />} wins in{" "}
-        {Math.ceil(state.playHistory.length / 2)} plays.
+        {Math.ceil(state.playHistory.length / 2)} moves.
       </>
     ) : (
       <>It's player {<Square value={turn} />}'s turn</>

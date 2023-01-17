@@ -16,7 +16,7 @@ export interface GomokuConfig {
   timeout: number
   dark: boolean
   playerColors: string
-  highlightColor: string
+  highlightColors: string
   game: string
 }
 
@@ -27,7 +27,7 @@ function getConfig(location: Location) {
     timeout: () => 500,
     dark: () => false,
     playerColors: () => "",
-    highlightColor: () => "",
+    highlightColors: () => "aaeeff:ffc080",
     game: () => "",
   })
   return config

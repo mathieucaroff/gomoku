@@ -22,7 +22,6 @@ export function importGame(gameDescription: string): Position[] {
     .trim()
     .split(/[^a-zA-Z0-9]/)
     .map((line, k) => {
-      console.log("line", line)
       let x = parseInt(line[0], 36) - 10
       let y = +line.slice(1) - 1
       if (!isValidCoordinate(x) || !isValidCoordinate(y)) {

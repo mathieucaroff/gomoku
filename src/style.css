@@ -4,8 +4,9 @@
     /* Note: these CSS variables are now obtained form the configuration and
        dynamically inserted */
     --first-color: #60E0FF;
+    --first-hightlight-color: #aaeeff;
     --second-color: #FF8000;
-    --hightlight-color: #FFFF00;
+    --second-hightlight-color: #ffc080;
 
     --foreground-color: #000000;
     --background-color: #FFFFFF;
@@ -21,13 +22,23 @@ h1 {
     font-family: PrismaFont;
     font-size: 55px;
     margin: 0;
+
+}
+
+.square {
+    background-color: #e9e9ed;
+    border-top-color: #e3e3e3;
+    border-left-color: #e3e3e3;
+    border-right-color: #9a9a9a;
+    border-bottom-color: #9a9a9a;
 }
 
 /* dark theme */
 html.dark {
     --first-color: #007692;
+    --first-hightlight-color: #88c7d7;
     --second-color: #cc6600;
-    --hightlight-color: #880088;
+    --second-hightlight-color: #e7bb80;
 
     --foreground-color: #FFFFFF;
     --background-color: #181a1b;
@@ -48,7 +59,7 @@ div.field {
 .square {
     width: 24px;
     height: 24px;
-    border-radius: 9999px;
+    border-radius: 999px;
 }
 .square--1, html.dark .square--1 {
     background-color: var(--first-color);
@@ -58,13 +69,13 @@ div.field {
 }
 table {
     display: inline-block;
-    border:none;
+    border: none;
     border-collapse: collapse;
 }
 
 /* History table */
 table.history {
-    min-width: 180px;
+    min-width: 220px;
 }
 table.history th {
     padding-left: 2px;
@@ -107,10 +118,12 @@ table.board td {
 table.board .square {
     width: calc(min(4.7svh, 4.7svw) - 2px);
     height: calc(min(4.7svh, 4.7svw) - 2px);
-    border-radius: 999px;
 }
-table.board .square--highlight {
-    background-color: var(--hightlight-color);
+table.board .square--highlight.square--1 {
+    background-color: var(--first-hightlight-color);
+}
+table.board .square--highlight.square--2 {
+    background-color: var(--second-hightlight-color);
 }
 
 .game-status-modal button {
