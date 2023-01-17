@@ -1,3 +1,5 @@
+@import "./font.css";
+
 :root {
     /* Note: these CSS variables are now obtained form the configuration and
        dynamically inserted */
@@ -10,9 +12,15 @@
 }
 
 html {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: RobotoFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--background-color);
     color: var(--foreground-color);
+}
+
+h1 {
+    font-family: PrismaFont;
+    font-size: 55px;
+    margin: 0;
 }
 
 /* dark theme */

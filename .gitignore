@@ -1,5 +1,7 @@
 /*/
 .*
-!/src
+
+!/asset/
+!/src/
 !.gitignore
 !.prettier*

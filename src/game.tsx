@@ -191,6 +191,8 @@ export function Game(prop: {
     </tr>
   )
 
+  let moveCount = Math.ceil(state.playHistory.length / 2)
+
   return (
     <>
       <div className="field">
@@ -221,12 +223,19 @@ export function Game(prop: {
                 {state.versus === "humanHuman" || state.versus === "aiAi" ? (
                   <>
                     Player {<Square value={(3 - turn) as 1 | 2} />} wins in{" "}
-                    {Math.ceil(state.playHistory.length / 2)} plays
+                    {moveCount} plays
                   </>
                 ) : state.versus === "humanAi" && turn === 2 ? (
-                  "Victory!"
+                  <>
+                    Victory!
+                    <br />
+                    You won in {moveCount} moves
+                  </>
                 ) : (
-                  "Defeat!"
+                  <>
+                    Defeat!
+                    <br /> You lost after {moveCount} moves
+                  </>
                 )}
               </Modal>
             )}
