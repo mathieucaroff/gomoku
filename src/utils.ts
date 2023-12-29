@@ -15,3 +15,13 @@ export function pairs<T>(array: T[]): [T, T][] {
 export function positionToString({ x, y }: Position) {
   return (x + 10).toString(36).toUpperCase() + (y + 1)
 }
+
+export function compareStringProperty<T extends string>(propertyName: T) {
+  type TT = { [property in T]: string }
+  return (a: TT, b: TT) => a[propertyName].localeCompare(b[propertyName])
+}
+
+export function compareNumberProperty<T extends string>(propertyName: T) {
+  type TT = { [property in T]: number }
+  return (a: TT, b: TT) => a[propertyName] - b[propertyName]
+}

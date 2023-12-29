@@ -2,22 +2,20 @@ import * as React from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
 import { Modal } from "./components/Modal/Modal"
 import { Square } from "./components/Square/Square"
-import { getBestPlayArray } from "./core/gomokuAi"
+import { gomokuAiOneRecommendation } from "./core/gomokuAiOne"
 import { exportGame, importGame } from "./exportImport"
-import { GomokuConfig, Versus } from "./main"
-import { Board, Position } from "./type"
+import { Board, Engine, GomokuConfig, Position, Turn, Versus } from "./type"
 import { pairs, positionToString } from "./utils"
-
-const gomokuAiPlay = getBestPlayArray
+import { gomokuPvsAiRecommendation } from "./core/pvs/gomokuPvsAi"
 
 function getBoard(playHistory: Position[]) {
   let board: Board = Array.from({ length: 19 }, () =>
     Array.from({ length: 19 }, () => 0),
   )
-  let turn = 1 as 1 | 2
+  let turn: Turn = 1
   playHistory.forEach(({ x, y }) => {
     board[y][x] = turn
-    turn = (3 - turn) as 1 | 2
+    turn = 3 - turn
   })
   return board
 }
@@ -30,6 +28,7 @@ export function Game(prop: {
   let [state, setState] = useState(() => {
     return {
       dark: config.dark,
+      engine: config.engine,
       versus: config.versus,
       playHistory: importGame(config.game),
       importExportGame: "",
@@ -59,13 +58,13 @@ export function Game(prop: {
     document.documentElement.classList.remove("dark")
   }
 
-  let turn = ((state.playHistory.length % 2) + 1) as 1 | 2
+  let turn = ((state.playHistory.length % 2) + 1) as Turn
   let board = getBoard(state.playHistory)
-  let recommendation = gomokuAiPlay(turn, board)
+  let recommendation = gomokuAiOneRecommendation(board, turn)
   let gameStatus =
     recommendation === "gameover" ? (
       <>
-        Game Over, player {<Square value={(3 - turn) as 1 | 2} />} wins in{" "}
+        Game Over, player {<Square value={(3 - turn) as Turn} />} wins in{" "}
         {Math.ceil(state.playHistory.length / 2)} moves.
       </>
     ) : (
@@ -76,41 +75,60 @@ export function Game(prop: {
     if (
       state.versus === "aiAi" ||
       (state.versus === "humanAi" && turn === 2) ||
-      (state.versus === "aiHuman" && turn === 1)
+      (state.versus === "aiHuman" && turn === 1) ||
+      state.versus === "onePvs" ||
+      state.versus === "pvsOne"
     ) {
+      let { engine } = state
+      if (state.versus === "onePvs" || state.versus === "pvsOne") {
+        engine = (state.versus === "onePvs") === (turn === 1) ? "one" : "pvs"
+      }
+
+      let [getAiRecommendation, timeout] = {
+        one: [gomokuAiOneRecommendation, config.aiOneTimeout] as const,
+        pvs: [gomokuPvsAiRecommendation, config.aiPvsTimeout] as const,
+      }[engine]
+
       let timer = setTimeout(() => {
-        let playArray = config.defensive
-          ? gomokuAiPlay((3 - turn) as 1 | 2, board)
-          : gomokuAiPlay(turn, board)
-        if (playArray !== "gameover") {
+        let playArray = getAiRecommendation(
+          board,
+          config.defensive ? ((3 - turn) as Turn) : turn,
+        )
+        if (playArray !== "gameover" && playArray.length > 0) {
           let { x, y } = playArray[Math.floor(Math.random() * playArray.length)]
           let { playHistory } = state
           playHistory.push({ x, y })
           setState({ ...state, importExportGame: exportGame(playHistory) })
         }
-      }, config.timeout)
+      }, timeout)
       return () => {
         clearTimeout(timer)
       }
     }
   })
 
+  let handleEngineChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setState({ ...state, engine: event.target.value as Engine })
+  }
+  let engineOptionArray: Record<Engine, string> = {
+    one: "One (hard)",
+    pvs: "PVS (harder)",
+  }
+
   let handleVersusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setState({ ...state, versus: event.target.value as Versus })
   }
   let versusOptionArray: Record<Versus, string> = {
-    humanAi: "human vs ai",
-    aiHuman: "ai vs human",
-    humanHuman: "human vs human",
-    aiAi: "ai vs ai",
+    humanAi: "Human vs AI",
+    aiHuman: "AI vs Human",
+    humanHuman: "Human vs Human",
+    aiAi: "AI vs AI",
+    onePvs: "One vs PVS",
+    pvsOne: "PVS vs One",
   }
 
   let handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (event.target.value === "dark") {
-      setState({ ...state, dark: true })
-    } else {
-      setState({ ...state, dark: false })
-    }
+    setState({ ...state, dark: event.target.value === "dark" })
   }
 
   let handleKeyDown =
@@ -203,8 +221,26 @@ export function Game(prop: {
             </p>
             <div>
               Game mode:{" "}
-              <select onChange={handleVersusChange} value={state.versus}>
+              <select
+                onChange={handleVersusChange}
+                value={state.versus}
+                disabled={recommendation === "gameover"}
+              >
                 {Object.entries(versusOptionArray).map(([value, text]) => (
+                  <option {...{ value, key: value }}>{text}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              Engine:{" "}
+              <select
+                onChange={handleEngineChange}
+                value={state.engine}
+                disabled={
+                  state.versus === "pvsOne" || state.versus === "onePvs"
+                }
+              >
+                {Object.entries(engineOptionArray).map(([value, text]) => (
                   <option {...{ value, key: value }}>{text}</option>
                 ))}
               </select>
@@ -216,23 +252,50 @@ export function Game(prop: {
                 <option value="dark">Dark</option>
               </select>
             </div>
+            <div>
+              <button
+                disabled={state.playHistory.length === 0}
+                onClick={() => {
+                  setState({
+                    ...state,
+                    playHistory: state.playHistory.slice(0, -1),
+                  })
+                }}
+              >
+                Undo
+              </button>
+            </div>
             {recommendation === "gameover" && (
               <Modal className="game-status-modal">
-                {state.versus === "humanHuman" || state.versus === "aiAi" ? (
+                {state.versus === "humanHuman" ? (
                   <>
-                    Player {<Square value={(3 - turn) as 1 | 2} />} wins in{" "}
-                    {moveCount} plays
+                    Player {<Square value={(3 - turn) as Turn} />} won in{" "}
+                    {moveCount} moves
                   </>
-                ) : state.versus === "humanAi" && turn === 2 ? (
+                ) : state.versus === "aiAi" ? (
+                  <>
+                    AI {<Square value={(3 - turn) as Turn} />} won in{" "}
+                    {moveCount} moves
+                  </>
+                ) : state.versus === "onePvs" || state.versus === "pvsOne" ? (
+                  <>
+                    AI{" "}
+                    {(state.versus === "onePvs") === (turn === 2)
+                      ? '"One"'
+                      : '"PVS"'}{" "}
+                    won after {moveCount} moves
+                  </>
+                ) : (state.versus === "humanAi") === (turn === 2) ? (
                   <>
                     Victory!
                     <br />
-                    You won in {moveCount} moves
+                    You won after {moveCount} moves
                   </>
                 ) : (
                   <>
                     Defeat!
-                    <br /> You lost after {moveCount} moves
+                    <br />
+                    You lost after {moveCount} moves
                   </>
                 )}
               </Modal>
@@ -293,7 +356,7 @@ export function Game(prop: {
               <thead>
                 <tr>
                   <th>n°</th>
-                  <th colSpan={4}>play</th>
+                  <th colSpan={4}>move</th>
                 </tr>
               </thead>
               <tbody>

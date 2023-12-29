@@ -7,24 +7,22 @@ import { createStyleSheet } from "./lib/styleSheet"
 import { ensureSpacelessURL, resolveSearch } from "./lib/urlParameter"
 
 import "./style.css"
-
-export type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
-
-export interface GomokuConfig {
-  defensive: boolean
-  versus: Versus
-  timeout: number
-  dark: boolean
-  playerColors: string
-  highlightColors: string
-  game: string
-}
+import { GomokuConfig, Versus } from "./type"
 
 function getConfig(location: Location) {
   let config = resolveSearch<GomokuConfig>(location, {
     defensive: () => false,
+    engine: () => "one",
     versus: () => "humanAi" as Versus,
-    timeout: () => 500,
+    timeout: () => null,
+    aiOneTimeout: ({ timeout }) => {
+      let t = timeout()
+      return t !== null ? t : 500
+    },
+    aiPvsTimeout: ({ timeout }) => {
+      let t = timeout()
+      return t !== null ? t : 0
+    },
     dark: () => false,
     playerColors: () => "",
     highlightColors: () => "aaeeff:ffc080",
