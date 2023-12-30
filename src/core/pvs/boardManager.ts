@@ -3,7 +3,7 @@ import { getGameEvaluation, getMoveArray } from "./gameEvaluation"
 
 export function getBoardManager(board: Board, turn: Turn, limit: number) {
   let moveArray = getMoveArray(board, turn, limit)!
-  if (moveArray === null) {
+  if (moveArray === null || moveArray.length === 0) {
     return {
       isTerminal: true,
       next: () => "stop" as const,

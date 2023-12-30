@@ -3,9 +3,9 @@ import { positionToString } from "../../utils"
 import { getBoardManager } from "./boardManager"
 import { pvs } from "./principalVariationSearch"
 
-const firstLimit = 4
-const subsequentLimit = 4
-const depth = 5
+const firstLimit = 9
+const subsequentLimit = 2
+const depth = 11
 
 /**
  * @param turn whose player it is the turn of
@@ -19,15 +19,16 @@ export function gomokuPvsAiRecommendation(
   turn: Turn,
 ): Position[] | "gameover" {
   let bestMoveArray: Position[] = []
-  let alpha = -Infinity
+  let bestScore = Infinity
+  let bestPotential = 0
 
   let manager = getBoardManager(board, turn, firstLimit)
-  let k = 0
-  while (manager.next() === "continue" && k < firstLimit) {
+
+  for (let k = 0; manager.next() === "continue" && k < firstLimit; k++) {
     let score = pvs(
       board,
       depth,
-      alpha,
+      -Infinity,
       Infinity,
       (3 - turn) as Turn,
       subsequentLimit,
@@ -40,17 +41,20 @@ export function gomokuPvsAiRecommendation(
       move.potential,
       score,
     )
-    if (score === alpha) {
-      bestMoveArray.push(manager.getMove())
-    } else if (score > alpha) {
-      alpha = score
-      bestMoveArray.splice(0, bestMoveArray.length, manager.getMove())
+    if (score === bestScore && move.potential === bestPotential) {
+      bestMoveArray.push(move)
+    } else if (
+      score < bestScore ||
+      (score === bestScore && move.potential > bestPotential)
+    ) {
+      bestScore = score
+      bestPotential = move.potential
+      bestMoveArray.splice(0, bestMoveArray.length, move)
     }
-    k += 1
   }
   manager.reset()
 
-  console.log("bestMoveArray", bestMoveArray)
+  console.log("bestMoveArray", bestMoveArray.map(positionToString))
 
   return bestMoveArray
 }

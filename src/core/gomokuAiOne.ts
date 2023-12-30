@@ -11,7 +11,6 @@ function processLineOfFive(
   dy: number,
 ) {
   // determine the priority, between 0 and 9
-  let priority = -1
   let color = 0 // The color of the current line, if any
   let counter = 0 // The number of stones in the current li
   for (let k = 0; k < 5; k++) {
@@ -19,26 +18,21 @@ function processLineOfFive(
     if (c > 0) {
       if (color > 0) {
         if (c !== color) {
-          priority = 0
-          break
-        } else {
-          counter += 1
+          return
         }
+        counter += 1
       } else {
         color = c
         counter += 1
       }
     }
   }
-  if (priority === -1) {
-    if (counter === 5) {
-      gameOverRef.current = true
-    } else if (counter > 0) {
-      priority = 2 * counter + +(color === turn)
-    } else {
-      priority = 1
-    }
+  if (counter === 5) {
+    gameOverRef.current = true
+    return
   }
+
+  let priority = counter > 0 ? 2 * counter + +(color === turn) : 1
 
   // increase the potential of each of the five positions
   for (let k = 0; k < 5; k++) {
@@ -103,14 +97,6 @@ export function aiOneProcessing(
 ) {
   // compute the potential grid
   processBoard(gameOverRef, potentialGrid, board, turn)
-
-  // the last component of the potential should be considered negatively,
-  // so complement it to 36, as 36 is its maximum value
-  for (let y = 0, c = board.length; y < c; y++) {
-    for (let x = 0, d = board[y].length; x < d; x++) {
-      potentialGrid[y][x][9] = 36 - potentialGrid[y][x][9]
-    }
-  }
 
   // extract the best position(s) and return one
   let bestPotential = "0".repeat(10)

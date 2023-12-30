@@ -9,6 +9,8 @@ export interface Position {
   y: number
 }
 
+export type Move = Position & { potential: number }
+
 export type PotentialGrid = number[][][]
 
 export type Engine = "one" | "pvs"

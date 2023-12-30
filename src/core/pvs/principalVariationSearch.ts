@@ -17,7 +17,7 @@ export function pvs(
     return 0
   }
   if (manager.isTerminal) {
-    return Infinity
+    return -Infinity
   }
 
   for (let k = 0; k < limit; k++) {

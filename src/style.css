@@ -133,4 +133,5 @@ table.board .square--highlight.square--2 {
 
 .game-status-modal {
     max-width: min(45svh, 45svw);
+    opacity: 0.8;
 }

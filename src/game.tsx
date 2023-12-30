@@ -221,11 +221,7 @@ export function Game(prop: {
             </p>
             <div>
               Game mode:{" "}
-              <select
-                onChange={handleVersusChange}
-                value={state.versus}
-                disabled={recommendation === "gameover"}
-              >
+              <select onChange={handleVersusChange} value={state.versus}>
                 {Object.entries(versusOptionArray).map(([value, text]) => (
                   <option {...{ value, key: value }}>{text}</option>
                 ))}
