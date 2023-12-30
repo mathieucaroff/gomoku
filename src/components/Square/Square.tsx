@@ -10,18 +10,26 @@ export type SquareProp = {
   ) => (event: React.KeyboardEvent<HTMLButtonElement>) => void
   disabled?: boolean
   className?: string
+  textual?: boolean
 }
 
 export function Square(props: SquareProp): React.ReactElement {
-  let { className, position, value, disabled, onClick, onKeyDown } = props
-  return (
+  let { className, position, value, disabled, textual, onClick, onKeyDown } =
+    props
+  let button = (
     <button
       disabled={disabled}
       className={`square square--${value} ${className ?? ""}`}
       onClick={position && onClick?.(position)}
       onKeyDown={position && onKeyDown?.(position)}
     >
-      {["", "X", "O"][value]}
+      {["+", "", ""][value]}
     </button>
   )
+  if (textual) {
+    return (
+      <span style={{ position: "relative", bottom: "0.3em" }}>{button}</span>
+    )
+  }
+  return button
 }

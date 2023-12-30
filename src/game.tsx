@@ -61,14 +61,24 @@ export function Game(prop: {
   let turn = ((state.playHistory.length % 2) + 1) as Turn
   let board = getBoard(state.playHistory)
   let recommendation = gomokuAiOneRecommendation(board, turn, state.playHistory)
+  let maybeTheAiIsThinking =
+    (state.versus === "humanAi" && turn === 1) ||
+    (state.versus === "aiHuman" && turn === 2) ||
+    state.versus === "humanHuman" ||
+    recommendation === "gameover"
+      ? ""
+      : ", the AI is thinking..."
   let gameStatus =
     recommendation === "gameover" ? (
       <>
-        Game Over, player {<Square value={(3 - turn) as Turn} />} wins in{" "}
+        Game Over, player {<Square value={(3 - turn) as Turn} textual />} won in{" "}
         {Math.ceil(state.playHistory.length / 2)} moves.
       </>
     ) : (
-      <>It's player {<Square value={turn} />}'s turn</>
+      <>
+        It is <Square value={turn} textual />
+        's turn{maybeTheAiIsThinking}
+      </>
     )
 
   useEffect(() => {
@@ -253,7 +263,11 @@ export function Game(prop: {
               <button
                 disabled={state.playHistory.length === 0}
                 onClick={() => {
-                  let playHistory = state.playHistory.slice(0, -1)
+                  let undoCount =
+                    state.versus === "humanAi" || state.versus === "aiHuman"
+                      ? 2
+                      : 1
+                  let playHistory = state.playHistory.slice(0, -undoCount)
                   setState({
                     ...state,
                     playHistory,
@@ -268,12 +282,12 @@ export function Game(prop: {
               <Modal className="game-status-modal">
                 {state.versus === "humanHuman" ? (
                   <>
-                    Player {<Square value={(3 - turn) as Turn} />} won in{" "}
-                    {moveCount} moves
+                    Player {<Square value={(3 - turn) as Turn} textual />} won
+                    in {moveCount} moves
                   </>
                 ) : state.versus === "aiAi" ? (
                   <>
-                    AI {<Square value={(3 - turn) as Turn} />} won in{" "}
+                    AI {<Square value={(3 - turn) as Turn} textual />} won in{" "}
                     {moveCount} moves
                   </>
                 ) : state.versus === "onePvs" || state.versus === "pvsOne" ? (
@@ -347,10 +361,10 @@ export function Game(prop: {
             <table className="history">
               <colgroup>
                 <col span={1} style={{ width: "5%" }} />
-                <col span={1} style={{ width: "40%" }} />
                 <col span={1} style={{ width: "6%" }} />
                 <col span={1} style={{ width: "40%" }} />
                 <col span={1} style={{ width: "6%" }} />
+                <col span={1} style={{ width: "40%" }} />
               </colgroup>
               <thead>
                 <tr>
@@ -363,18 +377,15 @@ export function Game(prop: {
                   <tr key={k}>
                     <td>{k + 1}</td>
                     <td>
-                      <Square value={1} /> {positionToString(a)}
-                    </td>
-                    <td>
                       <button title="go back" onClick={handleGoBack(2 * k)}>
                         ⮌
                       </button>
                     </td>
+                    <td>
+                      <Square value={1} /> {positionToString(a)}
+                    </td>
                     {b ? (
                       <>
-                        <td>
-                          <Square value={2} /> {positionToString(b)}
-                        </td>
                         <td>
                           <button
                             title="go back"
@@ -382,6 +393,9 @@ export function Game(prop: {
                           >
                             ⮌
                           </button>
+                        </td>
+                        <td>
+                          <Square value={2} /> {positionToString(b)}
                         </td>
                       </>
                     ) : (
