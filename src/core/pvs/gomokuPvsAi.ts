@@ -1,12 +1,12 @@
 import { Board, Position, Turn } from "../../type"
 import { positionToString } from "../../utils"
-import { gomokuAiOneRecommendation } from "../gomokuAiOne"
 import { getBoardManager } from "./boardManager"
 import { pvs } from "./principalVariationSearch"
 
 const FIRST_LIMIT = 9
 const SUBSEQUENT_LIMIT = 6
 const MINIMUM_SUBSEQUENT_LIMIT = 1
+const DEPTH_DAMPENING_FACTOR = 0.5
 const DEPTH = 361
 function dynamicLimit(remainingDepth: number) {
   const depth = DEPTH - remainingDepth
@@ -25,8 +25,7 @@ export function gomokuPvsAiRecommendation(
   turn: Turn,
   playHistory: Position[],
 ): Position[] | "gameover" {
-  // Hard-coded solutions,
-  // A. For the first move
+  // Hard-coded solutions, for the first move
   // ...when playing first
   if (playHistory.length === 0) {
     return Array.from({ length: 25 }, (_, k) => ({
@@ -35,19 +34,15 @@ export function gomokuPvsAiRecommendation(
     }))
   }
   // ...when playing second
-  if (playHistory.length === 1) {
-    let move = playHistory[0]
-    let result = Array.from({ length: 9 }, (_, k) => ({
-      x: move.x + (k % 3) - 1,
-      y: move.y + Math.floor(k / 3) - 1,
-    }))
-    result.splice(4, 1)
-    return result.filter(({ x, y }) => x >= 0 && x < 19 && y >= 0 && y < 19)
-  }
-  // B. For the second move when playing first
-  if (playHistory.length === 2) {
-    return gomokuAiOneRecommendation(board, turn, playHistory)
-  }
+  // if (playHistory.length === 1) {
+  //   let move = playHistory[0]
+  //   let result = Array.from({ length: 9 }, (_, k) => ({
+  //     x: move.x + (k % 3) - 1,
+  //     y: move.y + Math.floor(k / 3) - 1,
+  //   }))
+  //   result.splice(4, 1)
+  //   return result.filter(({ x, y }) => x >= 0 && x < 19 && y >= 0 && y < 19)
+  // }
   // End of hard-coded solutions
   let moveArray: string[] = []
 
@@ -61,9 +56,10 @@ export function gomokuPvsAiRecommendation(
     let score = -pvs(
       board,
       DEPTH,
-      -Infinity,
+      bestScore,
       Infinity,
       (3 - turn) as Turn,
+      DEPTH_DAMPENING_FACTOR,
       dynamicLimit,
     )
 
@@ -90,13 +86,16 @@ export function gomokuPvsAiRecommendation(
   }
   manager.reset()
 
-  if (
-    bestMoveArray.length !== 1 ||
-    positionToString(bestMoveArray[0]) !== moveArray[0]
-  ) {
-    console.log("bestMoveArray", bestMoveArray.map(positionToString))
+  if (bestMoveArray.length !== 1) {
+    console.log(
+      "--- bestMoveArray",
+      bestMoveArray.map(positionToString),
+      bestScore,
+    )
+  } else if (positionToString(bestMoveArray[0]) !== moveArray[0]) {
+    console.log("--- bestMove", positionToString(bestMoveArray[0]), bestScore)
   } else {
-    console.log("---")
+    console.log(`---`, moveArray[0], bestScore)
   }
 
   return bestMoveArray

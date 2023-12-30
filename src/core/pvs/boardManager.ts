@@ -9,7 +9,7 @@ export function getBoardManager(board: Board, turn: Turn, limit: number) {
       next: () => "stop" as const,
       getMove: () => ({ x: -1, y: -1, potential: -1 }),
       reset: () => {},
-      getEvaluation: () => -Infinity,
+      getEvaluation: () => -Number.MAX_VALUE,
     }
   }
 

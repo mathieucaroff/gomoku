@@ -7,9 +7,10 @@ export function pvs(
   alpha: number,
   beta: number,
   turn: Turn,
-  dLim: (depth: number) => number,
+  depthDampeningFactor: number,
+  dynamicLimit: (depth: number) => number,
 ) {
-  let limit = dLim(depth)
+  let limit = dynamicLimit(depth)
   let manager = getBoardManager(board, turn, limit)
   // if (depth === 0 || manager.isTerminal) {
   //   return (3 - 2 * turn) * manager.getEvaluation()
@@ -18,7 +19,7 @@ export function pvs(
     return 0
   }
   if (manager.isTerminal) {
-    return -Infinity
+    return -Number.MAX_VALUE
   }
 
   for (let k = 0; k < limit; k++) {
@@ -27,11 +28,38 @@ export function pvs(
     }
     let score: number
     if (k === 0) {
-      score = -pvs(board, depth - 1, -beta, -alpha, (3 - turn) as Turn, dLim)
+      score =
+        -pvs(
+          board,
+          depth - 1,
+          -beta,
+          -alpha,
+          (3 - turn) as Turn,
+          depthDampeningFactor,
+          dynamicLimit,
+        ) * depthDampeningFactor // search with a full window
     } else {
-      score = -pvs(board, depth - 1, -alpha, -alpha, (3 - turn) as Turn, dLim) // search with a null window
+      score =
+        -pvs(
+          board,
+          depth - 1,
+          -alpha,
+          -alpha,
+          (3 - turn) as Turn,
+          depthDampeningFactor,
+          dynamicLimit,
+        ) * depthDampeningFactor // search with a null window
       if (alpha < score && score < beta) {
-        score = -pvs(board, depth - 1, -beta, -alpha, (3 - turn) as Turn, dLim) // if (it failed high, do a full re-search
+        score =
+          -pvs(
+            board,
+            depth - 1,
+            -beta,
+            -alpha,
+            (3 - turn) as Turn,
+            depthDampeningFactor,
+            dynamicLimit,
+          ) * depthDampeningFactor // if it failed high, do a full re-search
       }
     }
     alpha = Math.max(alpha, score)

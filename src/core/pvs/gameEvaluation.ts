@@ -42,7 +42,7 @@ export function getGameEvaluation(board: Board, turn: Turn) {
   processBoard(gameOverRef, potentialGrid, board, turn)
 
   if (gameOverRef.current) {
-    return -Infinity
+    return -Number.MAX_VALUE
   }
 
   let evaluation = 0
@@ -53,7 +53,7 @@ export function getGameEvaluation(board: Board, turn: Turn) {
         continue
       }
       if (potentialGrid[y][x][0] > 0) {
-        return Infinity
+        return Number.MAX_VALUE
       }
       evaluation += potentialGrid[y][x].reduce(
         (res, val) => -res * 361 + val,
