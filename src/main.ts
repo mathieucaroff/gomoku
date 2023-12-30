@@ -22,7 +22,7 @@ function getConfig(location: Location) {
     },
     aiPvsTimeout: ({ timeout }) => {
       let t = timeout()
-      return t !== null ? t : 0
+      return t !== null ? t : 50
     },
     dark: () => false,
     playerColors: () => "",
