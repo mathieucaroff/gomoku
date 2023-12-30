@@ -1,7 +1,7 @@
-import * as React from "react"
+import React from "react"
 import { Position } from "../../type"
 
-export type ButtonProp = {
+export type SquareProp = {
   position?: { x: number; y: number }
   value: 0 | 1 | 2
   onClick?: (position: Position) => () => void
@@ -12,7 +12,7 @@ export type ButtonProp = {
   className?: string
 }
 
-export function Square(props: ButtonProp) {
+export function Square(props: SquareProp): React.ReactElement {
   let { className, position, value, disabled, onClick, onKeyDown } = props
   return (
     <button

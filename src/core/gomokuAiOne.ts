@@ -127,10 +127,18 @@ export function aiOneProcessing(
 export function gomokuAiOneRecommendation(
   board: Board,
   turn: Turn,
+  playHistory: Position[],
 ): Position[] | "gameover" {
+  if (playHistory.length === 0) {
+    return Array.from({ length: 25 }, (_, k) => ({
+      x: 7 + (k % 5),
+      y: 7 + Math.floor(k / 5),
+    }))
+  }
+
   let gameOverRef = { current: false }
 
-  let bestMoveArray = []
+  let bestMoveArray: Position[] = []
 
   // start from a grid of zeros
   let potentialGrid: PotentialGrid = board.map((row) =>

@@ -1,5 +1,6 @@
-import * as React from "react"
+import { createElement } from "react"
 import { createRoot } from "react-dom/client"
+
 import * as packageInfo from "../package.json"
 import { Game } from "./game"
 import { githubCornerHTML } from "./lib/githubCorner"
@@ -31,7 +32,7 @@ function getConfig(location: Location) {
   return config
 }
 
-function main() {
+async function main() {
   ensureSpacelessURL(location)
 
   let cornerDiv = document.createElement("div")
@@ -41,12 +42,13 @@ function main() {
   )
   document.body.appendChild(cornerDiv)
 
-  let root = createRoot(document.getElementById("root"))
   let config = getConfig(location)
   console.log(config)
 
   let styleSheet = createStyleSheet(document)
   styleSheet.insertRule(":root {}")
-  root.render(React.createElement(Game, { config, styleSheet }))
+  let root = createRoot(document.getElementById("root")!)
+  root.render(createElement(Game, { config, styleSheet }))
 }
+
 main()

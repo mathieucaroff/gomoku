@@ -1,4 +1,4 @@
-import * as React from "react"
+import React from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
 import { Modal } from "./components/Modal/Modal"
 import { Square } from "./components/Square/Square"
@@ -60,7 +60,7 @@ export function Game(prop: {
 
   let turn = ((state.playHistory.length % 2) + 1) as Turn
   let board = getBoard(state.playHistory)
-  let recommendation = gomokuAiOneRecommendation(board, turn)
+  let recommendation = gomokuAiOneRecommendation(board, turn, state.playHistory)
   let gameStatus =
     recommendation === "gameover" ? (
       <>
@@ -93,6 +93,7 @@ export function Game(prop: {
         let playArray = getAiRecommendation(
           board,
           config.defensive ? ((3 - turn) as Turn) : turn,
+          state.playHistory,
         )
         if (playArray !== "gameover" && playArray.length > 0) {
           let { x, y } = playArray[Math.floor(Math.random() * playArray.length)]
@@ -169,7 +170,7 @@ export function Game(prop: {
     })
   }
   let handlePlayAgain = () => {
-    let playHistory = []
+    let playHistory: Position[] = []
     setState({
       ...state,
       playHistory,
@@ -252,9 +253,11 @@ export function Game(prop: {
               <button
                 disabled={state.playHistory.length === 0}
                 onClick={() => {
+                  let playHistory = state.playHistory.slice(0, -1)
                   setState({
                     ...state,
-                    playHistory: state.playHistory.slice(0, -1),
+                    playHistory,
+                    importExportGame: exportGame(playHistory),
                   })
                 }}
               >
@@ -326,7 +329,7 @@ export function Game(prop: {
                         playHistory,
                         importError: "",
                       })
-                    } catch (e) {
+                    } catch (e: any) {
                       setState({
                         ...state,
                         importError: e.message,
