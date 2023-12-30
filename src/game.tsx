@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef } from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
 import { Modal } from "./components/Modal/Modal"
 import { Square } from "./components/Square/Square"
@@ -35,6 +35,8 @@ export function Game(prop: {
       importError: "",
     }
   })
+
+  let distributor = useRef(0)
 
   React.useLayoutEffect(() => {
     let [playerOneColor, playerTwoColor] = config.playerColors.split(":")
@@ -100,16 +102,23 @@ export function Game(prop: {
       }[engine]
 
       let timer = setTimeout(async () => {
+        let ticket = ++distributor.current
         let playArray = await getAiRecommendation(
           board,
           config.defensive ? ((3 - turn) as Turn) : turn,
           state.playHistory,
         )
+        if (ticket !== distributor.current) {
+          return
+        }
         if (playArray !== "gameover" && playArray.length > 0) {
           let { x, y } = playArray[Math.floor(Math.random() * playArray.length)]
           let { playHistory } = state
           playHistory.push({ x, y })
-          setState({ ...state, importExportGame: exportGame(playHistory) })
+          setState((state) => ({
+            ...state,
+            importExportGame: exportGame(playHistory),
+          }))
         }
       }, timeout)
       return () => {
@@ -119,7 +128,7 @@ export function Game(prop: {
   })
 
   let handleEngineChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setState({ ...state, engine: event.target.value as Engine })
+    setState((state) => ({ ...state, engine: event.target.value as Engine }))
   }
   let engineOptionArray: Record<Engine, string> = {
     one: "One (hard)",
@@ -127,7 +136,7 @@ export function Game(prop: {
   }
 
   let handleVersusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setState({ ...state, versus: event.target.value as Versus })
+    setState((state) => ({ ...state, versus: event.target.value as Versus }))
   }
   let versusOptionArray: Record<Versus, string> = {
     humanAi: "Human vs AI",
@@ -139,7 +148,7 @@ export function Game(prop: {
   }
 
   let handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setState({ ...state, dark: event.target.value === "dark" })
+    setState((state) => ({ ...state, dark: event.target.value === "dark" }))
   }
 
   let handleKeyDown =
@@ -172,21 +181,21 @@ export function Game(prop: {
 
   let handleGoBack = (time: number) => () => {
     let playHistory = state.playHistory.slice(0, time)
-    setState({
+    setState((state) => ({
       ...state,
       playHistory,
       importExportGame: exportGame(playHistory),
       importError: "",
-    })
+    }))
   }
   let handlePlayAgain = () => {
     let playHistory: Position[] = []
-    setState({
+    setState((state) => ({
       ...state,
       playHistory,
       importExportGame: exportGame(playHistory),
       importError: "",
-    })
+    }))
   }
   let handlePlay = (position: Position) => () => {
     let { x, y } = position
@@ -197,12 +206,12 @@ export function Game(prop: {
     if (validVersus && board[y][x] === 0) {
       let { playHistory } = state
       playHistory.push({ x, y })
-      setState({
+      setState((state) => ({
         ...state,
         playHistory,
         importExportGame: exportGame(playHistory),
         importError: "",
-      })
+      }))
     }
   }
 
@@ -268,11 +277,11 @@ export function Game(prop: {
                       ? 2
                       : 1
                   let playHistory = state.playHistory.slice(0, -undoCount)
-                  setState({
+                  setState((state) => ({
                     ...state,
                     playHistory,
                     importExportGame: exportGame(playHistory),
-                  })
+                  }))
                 }}
               >
                 Undo
@@ -329,7 +338,10 @@ export function Game(prop: {
                   cols={7}
                   value={state.importExportGame}
                   onChange={(event) => {
-                    setState({ ...state, importExportGame: event.target.value })
+                    setState((state) => ({
+                      ...state,
+                      importExportGame: event.target.value,
+                    }))
                   }}
                 />
               </div>
@@ -338,16 +350,16 @@ export function Game(prop: {
                   onClick={() => {
                     try {
                       let playHistory = importGame(state.importExportGame)
-                      setState({
+                      setState((state) => ({
                         ...state,
                         playHistory,
                         importError: "",
-                      })
+                      }))
                     } catch (e: any) {
-                      setState({
+                      setState((state) => ({
                         ...state,
                         importError: e.message,
-                      })
+                      }))
                     }
                   }}
                   disabled={

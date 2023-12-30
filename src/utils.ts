@@ -37,3 +37,7 @@ export function readableScore(score: number): string {
   text = text.replace(/^(-?)(\d)\.\d+e-(\d+)$/, "=$1e$3m$2")
   return text.replace(/^(=?)e/, "$1+e")
 }
+
+export function pause(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}

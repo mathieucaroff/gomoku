@@ -1,5 +1,5 @@
 import { Board, Position, Turn } from "../../type"
-import { positionToString, readableScore } from "../../utils"
+import { pause, positionToString, readableScore } from "../../utils"
 import { gomokuAiOneRecommendation } from "../gomokuAiOne"
 import { getBoardManager } from "./boardManager"
 import { pvs } from "./principalVariationSearch"
@@ -21,11 +21,11 @@ function dynamicLimit(remainingDepth: number) {
  *          result only when some moves are equally good for the player
  *          according to the heuristic.
  */
-export function gomokuPvsAiRecommendation(
+export async function gomokuPvsAiRecommendation(
   board: Board,
   turn: Turn,
   playHistory: Position[],
-): Position[] | "gameover" {
+): Promise<Position[] | "gameover"> {
   // Hard-coded solutions, for the first move
   // ...when playing first
   if (playHistory.length === 0) {
@@ -51,6 +51,7 @@ export function gomokuPvsAiRecommendation(
   let manager = getBoardManager(board, turn, FIRST_LIMIT)
 
   for (let k = 0; manager.next() === "continue" && k < FIRST_LIMIT; k++) {
+    await pause(5)
     let score = -pvs(
       board,
       DEPTH,

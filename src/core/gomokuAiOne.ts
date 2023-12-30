@@ -117,14 +117,7 @@ export function aiOneProcessing(
   }
 }
 
-/**
- * @param turn whose player it is the turn of
- * @param board the state of the game to evaluate
- * @returns the best move(s) that the player can play. It contains more than one
- *          result only when some moves are equally good for the player
- *          according to the heuristic.
- */
-export function gomokuAiOneRecommendation(
+export function gomokuAiOne(
   board: Board,
   turn: Turn,
   playHistory: Position[],
@@ -142,7 +135,7 @@ export function gomokuAiOneRecommendation(
 
   // start from a grid of zeros
   let potentialGrid: PotentialGrid = board.map((row) =>
-    row.map(() => Array.from({ length: 10 }, () => 0)),
+    row.map(() => Array.from({ length: 9 }, () => 0)),
   )
 
   aiOneProcessing(gameOverRef, bestMoveArray, potentialGrid, board, turn)
@@ -152,4 +145,19 @@ export function gomokuAiOneRecommendation(
   }
 
   return bestMoveArray
+}
+
+/**
+ * @param turn whose player it is the turn of
+ * @param board the state of the game to evaluate
+ * @returns the best move(s) that the player can play. It contains more than one
+ *          result only when some moves are equally good for the player
+ *          according to the heuristic.
+ */
+export async function gomokuAiOneRecommendation(
+  board: Board,
+  turn: Turn,
+  playHistory: Position[],
+): Promise<Position[] | "gameover"> {
+  return gomokuAiOne(board, turn, playHistory)
 }
