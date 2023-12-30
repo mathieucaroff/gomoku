@@ -91,13 +91,13 @@ export async function gomokuPvsAiRecommendation(
   let readableBestScore = readableScore(bestScore)
   if (bestMoveArray.length !== 1) {
     console.log(
-      `[${"_●○"[turn]}] --- bestMoveArray`,
+      `[${"_●○"[turn]}] ---`,
       bestMoveArray.map(positionToString),
       readableBestScore,
     )
   } else if (positionToString(bestMoveArray[0]) !== moveArray[0]) {
     console.log(
-      `[${"_●○"[turn]}] --- bestMove`,
+      `[${"_●○"[turn]}] --- variation`,
       positionToString(bestMoveArray[0]),
       readableBestScore,
     )

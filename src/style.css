@@ -29,14 +29,18 @@ h1 {
 
 .square {
     background-color: #e2e2e2;
-    border-color: #e3e3e3, #9a9a9a, #9a9a9a, #e3e3e3;
+    border-color: #e3e3e3 #9a9a9a #9a9a9a #e3e3e3;
+}
+
+html.dark .square {
+    background-color: #444;
 }
 
 /* dark theme */
 html.dark {
-    --foreground-color: #FFFFFF;
+    --foreground-color: #FFF;
     --background-color: #181a1b;
-    --board-color: #333333;
+    --board-color: #333;
 }
 html.dark button, html.dark textarea, html.dark select {
     background-color: #181a1b;
