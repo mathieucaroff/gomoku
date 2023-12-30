@@ -1,5 +1,5 @@
 import { Board, Position, Turn } from "../../type"
-import { positionToString } from "../../utils"
+import { positionToString, readableScore } from "../../utils"
 import { gomokuAiOneRecommendation } from "../gomokuAiOne"
 import { getBoardManager } from "./boardManager"
 import { pvs } from "./principalVariationSearch"
@@ -68,7 +68,7 @@ export function gomokuPvsAiRecommendation(
         "move, potential, score",
         move && positionToString(move),
         move.potential,
-        score,
+        readableScore(score),
       )
     }
     moveArray.push(positionToString(move))
@@ -87,20 +87,21 @@ export function gomokuPvsAiRecommendation(
   }
   manager.reset()
 
+  let readableBestScore = readableScore(bestScore)
   if (bestMoveArray.length !== 1) {
     console.log(
       `[${"_●○"[turn]}] --- bestMoveArray`,
       bestMoveArray.map(positionToString),
-      bestScore,
+      readableBestScore,
     )
   } else if (positionToString(bestMoveArray[0]) !== moveArray[0]) {
     console.log(
       `[${"_●○"[turn]}] --- bestMove`,
       positionToString(bestMoveArray[0]),
-      bestScore,
+      readableBestScore,
     )
   } else {
-    console.log(`[${"_●○"[turn]}] ---`, moveArray[0], bestScore)
+    console.log(`[${"_●○"[turn]}] ---`, moveArray[0], readableBestScore)
   }
 
   return bestMoveArray

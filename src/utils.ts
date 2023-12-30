@@ -25,3 +25,15 @@ export function compareNumberProperty<T extends string>(propertyName: T) {
   type TT = { [property in T]: number }
   return (a: TT, b: TT) => a[propertyName] - b[propertyName]
 }
+
+export function readableScore(score: number): string {
+  if (score === Infinity) {
+    return "Inf"
+  } else if (score === -Infinity) {
+    return "-Inf"
+  }
+  let text = score.toExponential(1)
+  text = text.replace(/^(-?)(\d)\.\d+e\+(\d+)$/, "$1e$3m$2")
+  text = text.replace(/^(-?)(\d)\.\d+e-(\d+)$/, "=$1e$3m$2")
+  return text.replace(/^(=?)e/, "$1+e")
+}
