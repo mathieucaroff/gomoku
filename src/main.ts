@@ -25,8 +25,8 @@ function getConfig(location: Location) {
       return t !== null ? t : 50
     },
     dark: () => false,
-    playerColors: () => "",
-    highlightColors: () => "aaeeff:ffc080",
+    playerColors: () => "000:fff",
+    highlightColors: () => "000:fff",
     game: () => "",
   })
   return config

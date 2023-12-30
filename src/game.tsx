@@ -2,7 +2,7 @@ import React from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
 import { Modal } from "./components/Modal/Modal"
 import { Square } from "./components/Square/Square"
-import { gomokuAiOneRecommendation } from "./core/gomokuAiOne"
+import { gomokuAiOne, gomokuAiOneRecommendation } from "./core/gomokuAiOne"
 import { exportGame, importGame } from "./exportImport"
 import { Board, Engine, GomokuConfig, Position, Turn, Versus } from "./type"
 import { pairs, positionToString } from "./utils"
@@ -44,10 +44,10 @@ export function Game(prop: {
     styleSheet.deleteRule(0)
     styleSheet.insertRule(`
     html, html.dark {
-      --first-color: #${playerOneColor || (state.dark ? "007692" : "60E0FF")};
-      --first-hightlight-color: #${playerOneHighlightColor};
-      --second-color: #${playerTwoColor || (state.dark ? "FF8000" : "cc6600")};
-      --second-hightlight-color: #${playerTwoHighlightColor};
+      --first-color: #${playerOneColor || "000"};
+      --first-highlight-color: #${playerOneHighlightColor || "0F0"};
+      --second-color: #${playerTwoColor || "FFF"};
+      --second-highlight-color: #${playerTwoHighlightColor || "0F0"};
     }
   `)
   }, [state.dark])
@@ -60,7 +60,7 @@ export function Game(prop: {
 
   let turn = ((state.playHistory.length % 2) + 1) as Turn
   let board = getBoard(state.playHistory)
-  let recommendation = gomokuAiOneRecommendation(board, turn, state.playHistory)
+  let recommendation = gomokuAiOne(board, turn, state.playHistory)
   let maybeTheAiIsThinking =
     (state.versus === "humanAi" && turn === 1) ||
     (state.versus === "aiHuman" && turn === 2) ||
@@ -99,8 +99,8 @@ export function Game(prop: {
         pvs: [gomokuPvsAiRecommendation, config.aiPvsTimeout] as const,
       }[engine]
 
-      let timer = setTimeout(() => {
-        let playArray = getAiRecommendation(
+      let timer = setTimeout(async () => {
+        let playArray = await getAiRecommendation(
           board,
           config.defensive ? ((3 - turn) as Turn) : turn,
           state.playHistory,

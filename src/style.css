@@ -2,19 +2,16 @@
 
 :root {
     /* Note: these CSS variables are now obtained form the configuration and
-       dynamically inserted */
-    /* --first-color: #60E0FF;
-    --first-hightlight-color: #aaeeff;
-    --second-color: #FF8000;
-    --second-hightlight-color: #ffc080; */
+       dynamically inserted. See the key-text `styleSheet.insertRule`. */
 
     --first-color: #000;
-    --first-hightlight-color: #0F0;
+    --first-highlight-color: #0F0;
     --second-color: #FFF;
-    --second-hightlight-color: #0F0;
+    --second-highlight-color: #0F0;
 
     --foreground-color: #000000;
     --background-color: #FFFFFF;
+    --board-color: #f0f0f0;
 }
 
 html {
@@ -32,23 +29,18 @@ h1 {
 
 .square {
     background-color: #e2e2e2;
-    border-top-color: #e3e3e3;
-    border-left-color: #e3e3e3;
-    border-right-color: #9a9a9a;
-    border-bottom-color: #9a9a9a;
+    border-color: #e3e3e3, #9a9a9a, #9a9a9a, #e3e3e3;
 }
 
 /* dark theme */
 html.dark {
     --foreground-color: #FFFFFF;
     --background-color: #181a1b;
+    --board-color: #333333;
 }
 html.dark button, html.dark textarea, html.dark select {
     background-color: #181a1b;
-    border-top-color: #736b5e;
-    border-left-color: #736b5e;
-    border-right-color: #4c473e;
-    border-bottom-color: #4c473e;
+    border-color: #736b5e #4c473e #4c473e #736b5e;
     color: white;
 }
 
@@ -110,7 +102,7 @@ table.history td:nth-of-type(2), table.history td:nth-of-type(3) {
 
 /* play board */
 table.board {
-    background-color: #f0f0f0;
+    background-color: var(--board-color);
     margin-right: auto;
 }
 table.board td {
@@ -121,10 +113,10 @@ table.board .square {
     height: calc(min(4.7svh, 4.7svw) - 2px);
 }
 table.board .square--highlight.square--1 {
-    border-color: var(--first-hightlight-color);
+    border-color: var(--first-highlight-color);
 }
 table.board .square--highlight.square--2 {
-    border-color: var(--second-hightlight-color);
+    border-color: var(--second-highlight-color);
 }
 
 .game-status-modal button {
