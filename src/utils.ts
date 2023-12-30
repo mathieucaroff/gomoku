@@ -34,8 +34,10 @@ export function readableScore(score: number): string {
   }
   let text = score.toExponential(1)
   text = text.replace(/^(-?)(\d)\.\d+e\+(\d+)$/, "$1e$3m$2")
-  text = text.replace(/^(-?)(\d)\.\d+e-(\d+)$/, "=$1e$3m$2")
-  return text.replace(/^(=?)e/, "$1+e")
+  text = text.replace(/^(-?)(\d)\.\d+e-(\d+)$/, "$1e=")
+  text = text.replace(/^e/, "+e")
+  text = text.replace(/\+e(30\d)/, "+E$1")
+  return text
 }
 
 export function pause(ms: number) {
