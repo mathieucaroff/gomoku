@@ -1,6 +1,6 @@
-import { Board, Position, Turn } from "../../type"
+import { Board, Position, PotentialGrid, Turn } from "../../type"
 import { pause, positionToString, readableScore } from "../../utils"
-import { gomokuAiOneRecommendation } from "../gomokuAiOne"
+import { aiOneProcessing, gomokuAiOneRecommendation } from "../gomokuAiOne"
 import { getBoardManager } from "./boardManager"
 import { pvs } from "./principalVariationSearch"
 
@@ -42,6 +42,21 @@ export async function gomokuPvsAiRecommendation(
     ].filter(({ x, y }) => x >= 0 && x < 19 && y >= 0 && y < 19)
   }
   // End of hard-coded solutions
+  // Detect friendly and enemy potential lines of five and react immediately to them
+  let preBestMoveArray: Position[] = []
+  let potentialGrid: PotentialGrid = board.map((row) =>
+    row.map(() => Array.from({ length: 9 }, () => 0)),
+  )
+  let ref = { current: false }
+  aiOneProcessing(ref, preBestMoveArray, potentialGrid, board, turn)
+  if (!ref.current && preBestMoveArray.length > 0) {
+    let move = preBestMoveArray[0]
+    let potential = potentialGrid[move.y][move.x]
+    if (potential[0] > 0 || potential[1] > 0) {
+      return preBestMoveArray
+    }
+  }
+
   let moveArray: string[] = []
 
   let bestMoveArray: Position[] = []
