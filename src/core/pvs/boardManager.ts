@@ -1,5 +1,5 @@
 import { Board, Turn } from "../../type"
-import { getGameEvaluation, getMoveArray } from "./gameEvaluation"
+import { getMoveArray } from "./moveArray"
 
 export function getBoardManager(board: Board, turn: Turn, limit: number) {
   let moveArray = getMoveArray(board, turn, limit)!
@@ -9,7 +9,6 @@ export function getBoardManager(board: Board, turn: Turn, limit: number) {
       next: () => "stop" as const,
       getMove: () => ({ x: -1, y: -1, potential: -1 }),
       reset: () => {},
-      getEvaluation: () => -Number.MAX_VALUE,
     }
   }
 
@@ -33,6 +32,5 @@ export function getBoardManager(board: Board, turn: Turn, limit: number) {
     },
     getMove: () => move,
     reset,
-    getEvaluation: () => getGameEvaluation(board, turn),
   }
 }

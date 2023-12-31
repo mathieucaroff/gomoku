@@ -12,9 +12,7 @@ export function pvs(
 ) {
   let limit = dynamicLimit(depth)
   let manager = getBoardManager(board, turn, limit)
-  // if (depth === 0 || manager.isTerminal) {
-  //   return (3 - 2 * turn) * manager.getEvaluation()
-  // }
+
   if (depth === 0) {
     return 0
   }
@@ -33,23 +31,24 @@ export function pvs(
           board,
           depth - 1,
           -beta,
-          -alpha,
+          -alpha, // search with a **full** window
           (3 - turn) as Turn,
           depthDampeningFactor,
           dynamicLimit,
-        ) * depthDampeningFactor // search with a full window
+        ) * depthDampeningFactor
     } else {
       score =
         -pvs(
           board,
           depth - 1,
           -alpha,
-          -alpha,
+          -alpha, // search with a **null** window
           (3 - turn) as Turn,
           depthDampeningFactor,
           dynamicLimit,
-        ) * depthDampeningFactor // search with a null window
+        ) * depthDampeningFactor
       if (alpha < score && score < beta) {
+        // if it failed high, do a full re-search
         score =
           -pvs(
             board,
@@ -59,7 +58,7 @@ export function pvs(
             (3 - turn) as Turn,
             depthDampeningFactor,
             dynamicLimit,
-          ) * depthDampeningFactor // if it failed high, do a full re-search
+          ) * depthDampeningFactor
       }
     }
     alpha = Math.max(alpha, score)
@@ -69,19 +68,6 @@ export function pvs(
     }
   }
   manager.reset()
-
-  // console.log(
-  //   "pvs(board, depth:",
-  //   depth,
-  //   "alpha:",
-  //   alpha,
-  //   "beta:",
-  //   beta,
-  //   "turn:",
-  //   turn,
-  //   "):",
-  //   alpha,
-  // )
 
   return alpha
 }
