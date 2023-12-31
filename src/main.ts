@@ -16,6 +16,7 @@ function getConfig(location: Location) {
     engine: () => "one",
     versus: () => "humanAi" as Versus,
     timeout: () => null,
+    minimumTimeout: () => 500,
     aiOneTimeout: ({ timeout }) => {
       let t = timeout()
       return t !== null ? t : 500

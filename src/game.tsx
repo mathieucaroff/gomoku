@@ -5,7 +5,7 @@ import { Square } from "./components/Square/Square"
 import { gomokuAiOne, gomokuAiOneRecommendation } from "./core/gomokuAiOne"
 import { exportGame, importGame } from "./exportImport"
 import { Board, Engine, GomokuConfig, Position, Turn, Versus } from "./type"
-import { pairs, positionToString } from "./utils"
+import { pairs, pause, positionToString } from "./utils"
 import { gomokuPvsAiRecommendation } from "./core/pvs/gomokuPvsAi"
 
 function getBoard(playHistory: Position[]) {
@@ -103,11 +103,16 @@ export function Game(prop: {
 
       let timer = setTimeout(async () => {
         let ticket = ++distributor.current
+        let now = Date.now()
         let playArray = await getAiRecommendation(
           board,
           config.defensive ? ((3 - turn) as Turn) : turn,
           state.playHistory,
         )
+        let delta = Date.now() - now
+        if (delta < config.minimumTimeout) {
+          await pause(config.minimumTimeout - delta)
+        }
         if (ticket !== distributor.current) {
           return
         }

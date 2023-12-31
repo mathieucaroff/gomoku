@@ -28,6 +28,7 @@ export interface GomokuConfig {
   engine: Engine
   versus: Versus
   timeout: number | null
+  minimumTimeout: number
   aiOneTimeout: number
   aiPvsTimeout: number
   dark: boolean
