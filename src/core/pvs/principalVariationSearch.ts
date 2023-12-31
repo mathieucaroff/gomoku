@@ -17,7 +17,7 @@ export function pvs(
     return 0
   }
   if (manager.isTerminal) {
-    return -Number.MAX_VALUE
+    return -(2 ** 400)
   }
 
   for (let k = 0; k < limit; k++) {

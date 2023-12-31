@@ -32,11 +32,11 @@ export function readableScore(score: number): string {
   } else if (score === -Infinity) {
     return "-Inf"
   }
-  let text = score.toExponential(1)
-  text = text.replace(/^(-?)(\d)\.\d+e\+(\d+)$/, "$1e$3m$2")
-  text = text.replace(/^(-?)(\d)\.\d+e-(\d+)$/, "$1e=")
-  text = text.replace(/^e/, "+e")
-  text = text.replace(/\+e(30\d)/, "+E$1")
+  const s = (x: string) => (x ? x : "+")
+  let text = score.toString(2)
+  text = text.replace(/^0$/, "=")
+  text = text.replace(/^(-?)0.(00+1)/, (_m, a, b) => `=(${b.length}${s(a)})`)
+  text = text.replace(/^(-?)1(0+)/, (_m, a, b) => `${s(a)}${b.length}`)
   return text
 }
 

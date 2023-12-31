@@ -137,7 +137,7 @@ export function Game(prop: {
   }
   let engineOptionArray: Record<Engine, string> = {
     one: "One (hard)",
-    pvs: "PVS (harder)",
+    pvs: "PVS (very hard)",
   }
 
   let handleVersusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
