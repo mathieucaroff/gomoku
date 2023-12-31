@@ -9,9 +9,11 @@ const SUBSEQUENT_LIMIT = 6
 const MINIMUM_SUBSEQUENT_LIMIT = 1
 const DEPTH_DAMPENING_FACTOR = 0.5
 const DEPTH = 361
-function dynamicLimit(remainingDepth: number) {
-  const depth = DEPTH - remainingDepth
-  return Math.max(MINIMUM_SUBSEQUENT_LIMIT, SUBSEQUENT_LIMIT - depth)
+function dynamicLimit(subsequentLimit: number) {
+  return (remainingDepth: number) => {
+    const actualDepth = DEPTH - remainingDepth
+    return Math.max(MINIMUM_SUBSEQUENT_LIMIT, subsequentLimit - actualDepth)
+  }
 }
 
 /**
@@ -74,7 +76,7 @@ export async function gomokuPvsAiRecommendation(
       Infinity,
       (3 - turn) as Turn,
       DEPTH_DAMPENING_FACTOR,
-      dynamicLimit,
+      dynamicLimit(SUBSEQUENT_LIMIT - 4 + Math.min(playHistory.length, 4)),
     )
 
     let move = manager.getMove()
