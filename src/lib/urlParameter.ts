@@ -1,27 +1,30 @@
-import { indirectResolve, InfoObject } from './indirectResolver'
+import { indirectResolve, InfoObject } from "./indirectResolver"
 
 export let ensureSpacelessURL = (location: Location) => {
-  let spaceLessURL = location.href.replace(/ |%20/g, '')
+  let spaceLessURL = location.href.replace(/ |%20/g, "")
 
   if (location.href !== spaceLessURL) {
     location.replace(spaceLessURL)
   }
 }
 
-export let resolveHash = <T>(location: Location, defaultConfig: InfoObject<T>) => {
+export let resolveHash = <T>(
+  location: Location,
+  defaultConfig: InfoObject<T>,
+) => {
   let infoObject = { ...defaultConfig }
 
   // populate config with keys and key-value pairs from the URL
   location.hash
-    .split('#')
+    .split("#")
     .slice(1)
     .forEach((piece) => {
       let key: string
       let valueList: string[]
       let value: any
-      if (piece.includes('=')) {
-        ;[key, ...valueList] = piece.split('=')
-        value = valueList.join('=')
+      if (piece.includes("=")) {
+        ;[key, ...valueList] = piece.split("=")
+        value = valueList.join("=")
         if (!isNaN(value)) {
           value = +value
         }
@@ -30,24 +33,27 @@ export let resolveHash = <T>(location: Location, defaultConfig: InfoObject<T>) =
         value = true
       }
 
-      infoObject[key] = () => value
+      ;(infoObject as any)[key] = () => value
     })
 
   return indirectResolve<T>(infoObject)
 }
 
-export let resolveSearch = <T>(location: Location, defaultConfig: InfoObject<T>) => {
+export let resolveSearch = <T>(
+  location: Location,
+  defaultConfig: InfoObject<T>,
+) => {
   let infoObject = { ...defaultConfig }
 
   let search = new URLSearchParams(location.search)
 
   ;[...search.entries()].forEach(([key, value]: [string, any]) => {
-    if (value === '') {
+    if (value === "") {
       value = true
     } else if (!isNaN(value)) {
       value = +value
     }
-    infoObject[key] = () => value
+    ;(infoObject as any)[key] = () => value
   })
 
   return indirectResolve<T>(infoObject)

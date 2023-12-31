@@ -39,6 +39,12 @@ export function Game(prop: {
   let distributor = useRef(0)
 
   React.useLayoutEffect(() => {
+    if (state.dark) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+
     let [playerOneColor, playerTwoColor] = config.playerColors.split(":")
     let [playerOneHighlightColor, playerTwoHighlightColor] =
       config.highlightColors.split(":")
@@ -53,12 +59,6 @@ export function Game(prop: {
     }
   `)
   }, [state.dark])
-
-  if (state.dark) {
-    document.documentElement.classList.add("dark")
-  } else {
-    document.documentElement.classList.remove("dark")
-  }
 
   let turn = ((state.playHistory.length % 2) + 1) as Turn
   let board = getBoard(state.playHistory)
@@ -263,7 +263,10 @@ export function Game(prop: {
             </div>
             <div>
               Theme:{" "}
-              <select onChange={handleThemeChange}>
+              <select
+                onChange={handleThemeChange}
+                value={state.dark ? "dark" : "light"}
+              >
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select>
