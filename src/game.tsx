@@ -1,7 +1,7 @@
 import React, { useRef } from "react"
 import { KeyboardEvent, useEffect, useState } from "react"
 import { Modal } from "./components/Modal/Modal"
-import { Square } from "./components/Square/Square"
+import { Cross } from "./components/Cross/Cross"
 import { gomokuAiOne, gomokuAiOneRecommendation } from "./core/gomokuAiOne"
 import { exportGame, importGame } from "./exportImport"
 import { Board, Engine, GomokuConfig, Position, Turn, Versus } from "./type"
@@ -73,12 +73,12 @@ export function Game(prop: {
   let gameStatus =
     recommendation === "gameover" ? (
       <>
-        Game Over, player {<Square value={(3 - turn) as Turn} textual />} won in{" "}
+        Game Over, player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
         {Math.ceil(state.playHistory.length / 2)} moves.
       </>
     ) : (
       <>
-        It is <Square value={turn} textual />
+        It is <Cross value={turn} textual />
         's turn{maybeTheAiIsThinking}
       </>
     )
@@ -220,7 +220,7 @@ export function Game(prop: {
     }
   }
 
-  let squareDisabled = recommendation === "gameover"
+  let crossDisabled = recommendation === "gameover"
 
   let horizontalHeader = (
     <tr>
@@ -241,7 +241,7 @@ export function Game(prop: {
           <div className="info">
             <h1>Gomoku</h1>
             <p style={{ maxWidth: "300px" }}>
-              Fill a row, a column or a diagonal of five consecutive squares of
+              Fill a row, a column or a diagonal of five consecutive cross of
               your color to win.
             </p>
             <div>
@@ -299,12 +299,12 @@ export function Game(prop: {
               <Modal className="game-status-modal">
                 {state.versus === "humanHuman" ? (
                   <>
-                    Player {<Square value={(3 - turn) as Turn} textual />} won
-                    in {moveCount} moves
+                    Player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
+                    {moveCount} moves
                   </>
                 ) : state.versus === "aiAi" ? (
                   <>
-                    AI {<Square value={(3 - turn) as Turn} textual />} won in{" "}
+                    AI {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
                     {moveCount} moves
                   </>
                 ) : state.versus === "onePvs" || state.versus === "pvsOne" ? (
@@ -402,7 +402,7 @@ export function Game(prop: {
                       </button>
                     </td>
                     <td>
-                      <Square value={1} /> {positionToString(a)}
+                      <Cross value={1} textual /> {positionToString(a)}
                     </td>
                     {b ? (
                       <>
@@ -415,7 +415,7 @@ export function Game(prop: {
                           </button>
                         </td>
                         <td>
-                          <Square value={2} /> {positionToString(b)}
+                          <Cross value={2} textual /> {positionToString(b)}
                         </td>
                       </>
                     ) : (
@@ -437,13 +437,13 @@ export function Game(prop: {
                   let lastPlay = state.playHistory.slice(-1)[0] ?? {}
                   return (
                     <td key={x}>
-                      <Square
+                      <Cross
                         onClick={handlePlay}
                         onKeyDown={handleKeyDown}
-                        disabled={squareDisabled}
+                        disabled={crossDisabled}
                         className={
                           lastPlay.x === x && lastPlay.y === y
-                            ? "square--highlight"
+                            ? "cross--highlight"
                             : ""
                         }
                         value={value}

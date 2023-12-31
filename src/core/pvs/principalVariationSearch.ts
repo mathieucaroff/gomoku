@@ -17,7 +17,7 @@ export function pvs(
     return 0
   }
   if (manager.isTerminal) {
-    return -(2 ** 400)
+    return -(2 ** 412)
   }
 
   for (let k = 0; k < limit; k++) {

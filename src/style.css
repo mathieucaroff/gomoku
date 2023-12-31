@@ -11,7 +11,7 @@
 
     --foreground-color: #000000;
     --background-color: #FFFFFF;
-    --board-color: #f0f0f0;
+    --board-color: #e0e0e0;
 }
 
 html {
@@ -26,12 +26,12 @@ h1 {
     margin: 0;
 }
 
-.square {
-    background-color: #e2e2e2;
+.cross {
+    background-color: #ccc;
     border-color: #e3e3e3 #9a9a9a #9a9a9a #e3e3e3;
 }
 
-html.dark .square {
+html.dark .cross {
     background-color: #444;
 }
 
@@ -51,15 +51,15 @@ div.field {
     display: flex;
     align-items: flex-start;
 }
-.square {
+.cross {
     width: 24px;
     height: 24px;
     border-radius: 999px;
 }
-.square--1, html.dark .square--1 {
+.cross--1, html.dark .cross--1 {
     background-color: var(--first-color);
 }
-.square--2, html.dark .square--2 {
+.cross--2, html.dark .cross--2 {
     background-color: var(--second-color);
 }
 table {
@@ -111,14 +111,14 @@ table.board {
 table.board td {
     line-height: 0;
 }
-table.board .square {
+table.board .cross {
     width: calc(min(4.7svh, 4.7svw) - 2px);
     height: calc(min(4.7svh, 4.7svw) - 2px);
 }
-table.board .square--highlight.square--1 {
+table.board .cross--highlight.cross--1 {
     border-color: var(--first-highlight-color);
 }
-table.board .square--highlight.square--2 {
+table.board .cross--highlight.cross--2 {
     border-color: var(--second-highlight-color);
 }
 

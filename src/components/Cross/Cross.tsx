@@ -1,7 +1,7 @@
 import React from "react"
 import { Position } from "../../type"
 
-export type SquareProp = {
+export type CrossProp = {
   position?: { x: number; y: number }
   value: 0 | 1 | 2
   onClick?: (position: Position) => () => void
@@ -13,13 +13,13 @@ export type SquareProp = {
   textual?: boolean
 }
 
-export function Square(props: SquareProp): React.ReactElement {
+export function Cross(props: CrossProp): React.ReactElement {
   let { className, position, value, disabled, textual, onClick, onKeyDown } =
     props
   let button = (
     <button
       disabled={disabled}
-      className={`square square--${value} ${className ?? ""}`}
+      className={`cross cross--${value} ${className ?? ""}`}
       onClick={position && onClick?.(position)}
       onKeyDown={position && onKeyDown?.(position)}
     >
