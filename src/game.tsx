@@ -60,9 +60,15 @@ export function Game(prop: {
   `)
   }, [state.dark])
 
+  /** /\ reusable variables /\ */
   let turn = ((state.playHistory.length % 2) + 1) as Turn
   let board = getBoard(state.playHistory)
   let recommendation = gomokuAiOne(board, turn, state.playHistory)
+  let crossDisabled = recommendation === "gameover"
+  let moveCount = Math.ceil(state.playHistory.length / 2)
+  /** \/ reusable variables \/ */
+
+  /** /\ text /\ */
   let maybeTheAiIsThinking =
     (state.versus === "humanAi" && turn === 1) ||
     (state.versus === "aiHuman" && turn === 2) ||
@@ -70,6 +76,9 @@ export function Game(prop: {
     recommendation === "gameover"
       ? ""
       : ", the AI is thinking..."
+  /** \/ text \/ */
+
+  /** /\ elements /\ */
   let gameStatus =
     recommendation === "gameover" ? (
       <>
@@ -83,6 +92,28 @@ export function Game(prop: {
       </>
     )
 
+  let horizontalHeader = (
+    <tr>
+      <th></th>
+      {board.map((_, k) => (
+        <th key={k}>{(k + 10).toString(36).toUpperCase()}</th>
+      ))}
+      <th></th>
+    </tr>
+  )
+
+  let historyColgroup = (
+    <colgroup>
+      <col span={1} style={{ width: "5%" }} />
+      <col span={1} style={{ width: "6%" }} />
+      <col span={1} style={{ width: "40%" }} />
+      <col span={1} style={{ width: "6%" }} />
+      <col span={1} style={{ width: "40%" }} />
+    </colgroup>
+  )
+  /** \/ elements \/ */
+
+  /** /\ play useEffect /\ */
   useEffect(() => {
     if (
       state.versus === "aiAi" ||
@@ -131,7 +162,21 @@ export function Game(prop: {
       }
     }
   })
+  /** \/ play useEffect \/ */
 
+  /** /\ auto scroll history */
+  let historyBodyRef = useRef<HTMLTableElement>()
+  let lastHistoryHalfLengthRef = useRef(state.playHistory.length)
+  useEffect(() => {
+    let halfLength = Math.floor((state.playHistory.length + 1) / 2)
+    if (halfLength > lastHistoryHalfLengthRef.current) {
+      historyBodyRef.current?.scrollTo(0, historyBodyRef.current.scrollHeight)
+    }
+    lastHistoryHalfLengthRef.current = halfLength
+  }, [state.playHistory.length])
+  /** \/ auto scroll history */
+
+  /** /\ handlers /\ */
   let handleEngineChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setState((state) => ({ ...state, engine: event.target.value as Engine }))
   }
@@ -219,20 +264,7 @@ export function Game(prop: {
       }))
     }
   }
-
-  let crossDisabled = recommendation === "gameover"
-
-  let horizontalHeader = (
-    <tr>
-      <th></th>
-      {board.map((_, k) => (
-        <th key={k}>{(k + 10).toString(36).toUpperCase()}</th>
-      ))}
-      <th></th>
-    </tr>
-  )
-
-  let moveCount = Math.ceil(state.playHistory.length / 2)
+  /** \/ handlers \/ */
 
   return (
     <>
@@ -378,53 +410,52 @@ export function Game(prop: {
                 </button>
               </div>
             </div>
-            <table className="history">
-              <colgroup>
-                <col span={1} style={{ width: "5%" }} />
-                <col span={1} style={{ width: "6%" }} />
-                <col span={1} style={{ width: "40%" }} />
-                <col span={1} style={{ width: "6%" }} />
-                <col span={1} style={{ width: "40%" }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>n°</th>
-                  <th colSpan={4}>move</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pairs(state.playHistory).map(([a, b], k) => (
-                  <tr key={k}>
-                    <td>{k + 1}</td>
-                    <td>
-                      <button title="go back" onClick={handleGoBack(2 * k)}>
-                        ⮌
-                      </button>
-                    </td>
-                    <td>
-                      <Cross value={1} textual /> {positionToString(a)}
-                    </td>
-                    {b ? (
-                      <>
-                        <td>
-                          <button
-                            title="go back"
-                            onClick={handleGoBack(2 * k + 1)}
-                          >
-                            ⮌
-                          </button>
-                        </td>
-                        <td>
-                          <Cross value={2} textual /> {positionToString(b)}
-                        </td>
-                      </>
-                    ) : (
-                      ""
-                    )}
+            <div className="history-container">
+              <table className="history history-header">
+                {historyColgroup}
+                <thead>
+                  <tr>
+                    <th>n°</th>
+                    <th colSpan={4}>move</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+              </table>
+              <table className="history history-body" ref={historyBodyRef}>
+                {historyColgroup}
+                <tbody>
+                  {pairs(state.playHistory).map(([a, b], k) => (
+                    <tr key={k}>
+                      <td>{k + 1}</td>
+                      <td>
+                        <button title="go back" onClick={handleGoBack(2 * k)}>
+                          ⮌
+                        </button>
+                      </td>
+                      <td>
+                        <Cross value={1} textual /> {positionToString(a)}
+                      </td>
+                      {b ? (
+                        <>
+                          <td>
+                            <button
+                              title="go back"
+                              onClick={handleGoBack(2 * k + 1)}
+                            >
+                              ⮌
+                            </button>
+                          </td>
+                          <td>
+                            <Cross value={2} textual /> {positionToString(b)}
+                          </td>
+                        </>
+                      ) : (
+                        ""
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
         <table className="board">

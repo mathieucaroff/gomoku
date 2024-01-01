@@ -69,6 +69,11 @@ table {
 }
 
 /* History table */
+.history-container {
+    display: flex;
+    flex-direction: column;
+}
+
 table.history {
     min-width: 220px;
 }
@@ -96,6 +101,17 @@ table.history th:nth-of-type(3) {
 /* body width */
 table.history td:nth-of-type(2), table.history td:nth-of-type(3) {
     width: 60px;
+}
+
+/* Scrolling table */
+table.history {
+    max-height: 560px;
+    overflow-y: auto;
+    border: 2px solid black;
+}
+
+table.history-body {
+    border-top: 0;
 }
 
 /* general-info */
