@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Position } from "../../type"
 
 export type CrossProp = {
@@ -11,6 +11,7 @@ export type CrossProp = {
   disabled?: boolean
   className?: string
   textual?: boolean
+  hover?: boolean
 }
 
 export function Cross(props: CrossProp): React.ReactElement {

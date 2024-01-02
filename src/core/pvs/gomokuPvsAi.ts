@@ -36,12 +36,14 @@ export async function gomokuPvsAiRecommendation(
   // ...when playing second
   if (playHistory.length === 1) {
     let move = playHistory[0]
-    return [
-      { x: move.x - 1, y: move.y },
-      { x: move.x + 1, y: move.y },
-      { x: move.x, y: move.y - 1 },
-      { x: move.x, y: move.y + 1 },
-    ].filter(({ x, y }) => x >= 0 && x < 19 && y >= 0 && y < 19)
+    if (move.x > 0 && move.x < 18 && move.y > 0 && move.y < 18) {
+      return [
+        { x: move.x - 1, y: move.y },
+        { x: move.x + 1, y: move.y },
+        { x: move.x, y: move.y - 1 },
+        { x: move.x, y: move.y + 1 },
+      ]
+    }
   }
   // End of hard-coded solutions
   // Detect friendly and enemy potential lines of five and react immediately to them
