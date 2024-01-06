@@ -1,8 +1,13 @@
-import { Board, Turn } from "../../type"
+import { Board, ProcessBoardFunction, Turn } from "../../type"
 import { getMoveArray } from "./moveArray"
 
-export function getBoardManager(board: Board, turn: Turn, limit: number) {
-  let moveArray = getMoveArray(board, turn, limit)!
+export function getBoardManager(
+  board: Board,
+  turn: Turn,
+  limit: number,
+  processBoardFunction: ProcessBoardFunction,
+) {
+  let moveArray = getMoveArray(board, turn, limit, processBoardFunction)!
   if (moveArray === null || moveArray.length === 0) {
     return {
       isTerminal: true,

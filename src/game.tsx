@@ -7,11 +7,20 @@ import React, {
 } from "react"
 import { Modal } from "./components/Modal/Modal"
 import { Cross } from "./components/Cross/Cross"
-import { gomokuAiOne, gomokuAiOneRecommendation } from "./core/gomokuAiOne"
+import { gomokuAiOne, processBoardOne } from "./core/gomokuAiOne"
 import { exportGame, importGame } from "./exportImport"
-import { Board, Engine, GomokuConfig, Position, Turn, Versus } from "./type"
+import {
+  Board,
+  ClientPos,
+  Engine,
+  GomokuConfig,
+  Position,
+  Turn,
+  Versus,
+} from "./type"
 import { pairs, pause, positionToString } from "./utils"
-import { gomokuPvsAiRecommendation } from "./core/pvs/gomokuPvsAi"
+import { gomokuPvs } from "./core/pvs/gomokuPvsAi"
+import { gomokuAiTwo, processBoardTwo } from "./core/gomokuAiTwo"
 
 export function PlusSign(props: { width: number; height: number }) {
   return (
@@ -24,12 +33,12 @@ export function PlusSign(props: { width: number; height: number }) {
   )
 }
 
-function getBoard(playHistory: Position[]) {
+function getBoard(moveHistory: Position[]) {
   let board: Board = Array.from({ length: 19 }, () =>
     Array.from({ length: 19 }, () => 0),
   )
   let turn: Turn = 1
-  playHistory.forEach(({ x, y }) => {
+  moveHistory.forEach(({ x, y }) => {
     board[y][x] = turn
     turn = 3 - turn
   })
@@ -45,8 +54,9 @@ export function Game(prop: {
   let [state, setState] = useState(() => ({
     dark: config.dark,
     engine: config.engine,
+    secondEngine: config.secondEngine,
     versus: config.versus,
-    playHistory: importGame(config.game),
+    moveHistory: importGame(config.game),
     importExportGame: "",
     importError: "",
     hover: null as Position | null,
@@ -78,13 +88,13 @@ export function Game(prop: {
   /** \/ css dark theme management \/ */
 
   /** /\ reusable variables /\ */
-  let board = getBoard(state.playHistory)
-  let turn = ((state.playHistory.length % 2) + 1) as Turn
-  let moveCount = Math.ceil(state.playHistory.length / 2)
+  let board = getBoard(state.moveHistory)
+  let turn = ((state.moveHistory.length % 2) + 1) as Turn
+  let moveCount = Math.ceil(state.moveHistory.length / 2)
   let undoCount =
     state.versus === "humanAi" || state.versus === "aiHuman" ? 2 : 1
 
-  let recommendation = gomokuAiOne(board, turn, state.playHistory)
+  let recommendation = gomokuAiOne(board, turn, state.moveHistory)
   let crossDisabled = recommendation === "gameover"
   /** \/ reusable variables \/ */
 
@@ -103,7 +113,7 @@ export function Game(prop: {
     recommendation === "gameover" ? (
       <>
         Game Over, player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
-        {Math.ceil(state.playHistory.length / 2)} moves.
+        {Math.ceil(state.moveHistory.length / 2)} moves.
       </>
     ) : (
       <>
@@ -142,51 +152,55 @@ export function Game(prop: {
     if (
       state.versus === "aiAi" ||
       (state.versus === "humanAi" && turn === 2) ||
-      (state.versus === "aiHuman" && turn === 1) ||
-      state.versus === "onePvs" ||
-      state.versus === "pvsOne"
+      (state.versus === "aiHuman" && turn === 1)
     ) {
       let { engine } = state
-      if (state.versus === "onePvs" || state.versus === "pvsOne") {
-        engine = (state.versus === "onePvs") === (turn === 1) ? "one" : "pvs"
+      if (
+        state.versus === "aiAi" &&
+        turn === 2 &&
+        state.secondEngine !== "same"
+      ) {
+        engine = state.secondEngine
       }
 
-      let [getAiRecommendation, timeout] = {
-        one: [gomokuAiOneRecommendation, config.aiOneTimeout] as const,
-        pvs: [gomokuPvsAiRecommendation, config.aiPvsTimeout] as const,
+      let gomokuAi = {
+        basicOne: gomokuAiOne,
+        basicTwo: gomokuAiTwo,
+        pvsOne: gomokuPvs(processBoardOne),
+        pvsTwo: gomokuPvs(processBoardTwo),
+        defensiveOne: (board: Board, turn: Turn, moveHistory: Position[]) =>
+          gomokuAiOne(board, (3 - turn) as Turn, moveHistory),
       }[engine]
 
-      let timer = setTimeout(async () => {
-        let ticket = ++distributor.current
-        let now = Date.now()
-        let playArray = await getAiRecommendation(
-          board,
-          config.defensive ? ((3 - turn) as Turn) : turn,
-          state.playHistory,
-        )
-        if (ticket !== distributor.current) {
-          return
-        }
+      ;(async () => {
+        // let ticket = ++distributor.current
+        // let now = Date.now()
+        let playArray = gomokuAi(board, turn, state.moveHistory)
+        await pause(config.timeout)
 
-        let delta = Date.now() - now
-        if (delta < config.minimumTimeout) {
-          await pause(config.minimumTimeout - delta)
-        }
+        // let delta = Date.now() - now
+        // if (delta < config.timeout) {
+        //   await pause(config.timeout - delta)
+        // }
+        // if (ticket !== distributor.current) {
+        //   return
+        // }
+
         if (playArray !== "gameover" && playArray.length > 0) {
+          if (playArray.length > 1) {
+            console.log("playArray.lenght > 1:", playArray)
+          }
           let { x, y } = playArray[Math.floor(Math.random() * playArray.length)]
-          let { playHistory } = state
-          playHistory.push({ x, y })
+          let moveHistory = [...state.moveHistory, { x, y }]
           setState((state) => ({
             ...state,
-            importExportGame: exportGame(playHistory),
+            moveHistory,
+            importExportGame: exportGame(moveHistory),
           }))
         }
-      }, timeout)
-      return () => {
-        clearTimeout(timer)
-      }
+      })()
     }
-  })
+  }, [state.versus, turn, state.engine, state.secondEngine, state.moveHistory])
   /** \/ play useEffect \/ */
 
   /** /\ setup zoom on touch /\ */
@@ -199,11 +213,10 @@ export function Game(prop: {
       zoomArea.querySelector<HTMLDivElement>(".innerZoomArea")!
     zoomArea.classList.add("invisible")
     let handleBaseAreaMove = (
-      ev: MouseEvent | TouchEvent,
+      clientPos: ClientPos,
       action: "setHover" | "play",
     ) => {
-      let { clientX, clientY } =
-        (ev as TouchEvent).touches?.[0] ?? (ev as MouseEvent)
+      let { clientX, clientY } = clientPos
       // board rectangle
       let board = boardRef.current?.getBoundingClientRect()!
       let tx = `calc(${board.x + 465 - clientX}px - 16.6svw)`
@@ -222,7 +235,7 @@ export function Game(prop: {
         x: (clientX - grid.x) % (grid.width / 19),
         y: (clientY - grid.y) % (grid.height / 19),
       }
-      const GRID_MARGIN = 1
+      const GRID_MARGIN = 2
       let size = (grid.width + grid.height) / 2 / 19
       let radius = size / 2 - GRID_MARGIN
 
@@ -230,34 +243,39 @@ export function Game(prop: {
       let isHoveringOverACross =
         (pos.x - radius) ** 2 + (pos.y - radius) ** 2 <= radius ** 2
       if (isHoveringOverACross) {
-        buttonHoveringPosition = {
-          x: Math.floor(((clientX - grid.x) * 19) / grid.width),
-          y: Math.floor(((clientY - grid.y) * 19) / grid.height),
+        let x = Math.floor(((clientX - grid.x) * 19) / grid.width)
+        let y = Math.floor(((clientY - grid.y) * 19) / grid.height)
+        if (0 < x && x < 19 && 0 < y && y < 19) {
+          buttonHoveringPosition = { x, y }
         }
       }
       if (action === "setHover") {
         setState((state) => ({
           ...state,
-          hover: isHoveringOverACross ? buttonHoveringPosition : null,
+          hover: buttonHoveringPosition,
         }))
-      } else if (isHoveringOverACross) {
+      } else if (buttonHoveringPosition !== null) {
         handlePlay(buttonHoveringPosition!)()
       }
     }
     let handleDown = (ev: MouseEvent | TouchEvent) => {
       zoomArea.classList.remove("invisible")
-      handleBaseAreaMove(ev, "setHover")
+      let clientPos = (ev as TouchEvent).touches?.[0] ?? (ev as MouseEvent)
+      handleBaseAreaMove(clientPos, "setHover")
     }
     let handleMove = (ev: MouseEvent | TouchEvent) => {
-      handleBaseAreaMove(ev, "setHover")
       ev.preventDefault()
+      let clientPos = (ev as TouchEvent).touches?.[0] ?? (ev as MouseEvent)
+      handleBaseAreaMove(clientPos, "setHover")
     }
     let handleUp = (ev: MouseEvent | TouchEvent) => {
       zoomArea.classList.add("invisible")
-      handleBaseAreaMove(ev, "play")
+      let clientPos =
+        (ev as TouchEvent).changedTouches?.[0] ?? (ev as MouseEvent)
+      handleBaseAreaMove(clientPos, "play")
     }
-    baseArea.addEventListener("mousedown", handleDown, true)
-    baseArea.addEventListener("touchstart", handleDown, true)
+    window.addEventListener("mousedown", handleDown, true)
+    window.addEventListener("touchstart", handleDown, true)
     window.addEventListener("mousemove", handleMove, true)
     window.addEventListener("touchmove", handleMove, true)
     window.addEventListener("mouseup", handleUp, true)
@@ -275,23 +293,34 @@ export function Game(prop: {
 
   /** /\ auto scroll history */
   let historyBodyRef = useRef<HTMLTableElement>(null)
-  let lastHistoryHalfLengthRef = useRef(state.playHistory.length)
+  let lastHistoryHalfLengthRef = useRef(state.moveHistory.length)
   useEffect(() => {
-    let halfLength = Math.floor((state.playHistory.length + 1) / 2)
+    let halfLength = Math.floor((state.moveHistory.length + 1) / 2)
     if (halfLength > lastHistoryHalfLengthRef.current) {
       historyBodyRef.current?.scrollTo(0, historyBodyRef.current.scrollHeight)
     }
     lastHistoryHalfLengthRef.current = halfLength
-  }, [state.playHistory.length])
+  }, [state.moveHistory.length])
   /** \/ auto scroll history */
 
   /** /\ handlers /\ */
   let handleEngineChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setState((state) => ({ ...state, engine: event.target.value as Engine }))
   }
+  let handleSecondEngineChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setState((state) => ({
+      ...state,
+      secondEngine: event.target.value as Engine,
+    }))
+  }
   let engineOptionArray: Record<Engine, string> = {
-    one: "One (hard)",
-    pvs: "PVS (very hard)",
+    defensiveOne: "Defensive one (easy)",
+    basicOne: "One (normal)",
+    pvsOne: "PVS-one (normal)",
+    basicTwo: "Two (hard)",
+    pvsTwo: "PVS-two (very hard)",
   }
 
   let handleVersusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -302,8 +331,6 @@ export function Game(prop: {
     aiHuman: "AI vs Human",
     humanHuman: "Human vs Human",
     aiAi: "AI vs AI",
-    onePvs: "One vs PVS",
-    pvsOne: "PVS vs One",
   }
 
   let handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -339,39 +366,44 @@ export function Game(prop: {
     }
 
   let handleGoBack = (time: number) => () => {
-    let playHistory = state.playHistory.slice(0, time)
+    let moveHistory = state.moveHistory.slice(0, time)
     setState((state) => ({
       ...state,
-      playHistory,
-      importExportGame: exportGame(playHistory),
+      moveHistory,
+      importExportGame: exportGame(moveHistory),
       importError: "",
     }))
   }
   let handlePlayAgain = () => {
-    let playHistory: Position[] = []
     setState((state) => ({
       ...state,
-      playHistory,
-      importExportGame: exportGame(playHistory),
+      moveHistory: [],
+      importExportGame: exportGame([]),
       importError: "",
     }))
   }
   let handlePlay = (position: Position) => () => {
-    let { x, y } = position
-    let validVersus =
-      state.versus === "humanHuman" ||
-      (state.versus === "humanAi" && turn === 1) ||
-      (state.versus === "aiHuman" && turn === 2)
-    if (validVersus && board[y][x] === 0) {
-      let { playHistory } = state
-      playHistory.push({ x, y })
-      setState((state) => ({
+    setState((state) => {
+      let { x, y } = position
+      let turn = ((state.moveHistory.length % 2) + 1) as Turn
+      let validVersus =
+        state.versus === "humanHuman" ||
+        (state.versus === "humanAi" && turn === 1) ||
+        (state.versus === "aiHuman" && turn === 2)
+      if (!validVersus) {
+        return state
+      }
+      if (state.moveHistory.some((move) => move.x === x && move.y === y)) {
+        return state
+      }
+      let moveHistory = [...state.moveHistory, { x, y }]
+      return {
         ...state,
-        playHistory,
-        importExportGame: exportGame(playHistory),
+        moveHistory,
+        importExportGame: exportGame(moveHistory),
         importError: "",
-      }))
-    }
+      }
+    })
   }
   /** \/ handlers \/ */
 
@@ -398,11 +430,23 @@ export function Game(prop: {
           </div>
           <div>
             Engine:{" "}
+            <select onChange={handleEngineChange} value={state.engine}>
+              {Object.entries(engineOptionArray).map(([value, text]) => (
+                <option {...{ value, key: value }}>{text}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            Second Engine:{" "}
             <select
-              onChange={handleEngineChange}
-              value={state.engine}
-              disabled={state.versus === "pvsOne" || state.versus === "onePvs"}
+              onChange={handleSecondEngineChange}
+              value={state.secondEngine}
+              disabled={state.versus !== "aiAi"}
             >
+              <option value="same">
+                Same (
+                {engineOptionArray[state.engine].replace(/ ?\([^()]*\)/, "")})
+              </option>
               {Object.entries(engineOptionArray).map(([value, text]) => (
                 <option {...{ value, key: value }}>{text}</option>
               ))}
@@ -420,14 +464,14 @@ export function Game(prop: {
           </div>
           <div>
             <button
-              disabled={state.playHistory.length === 0}
+              disabled={state.moveHistory.length === 0}
               title={`Undo (${undoCount})`}
               onClick={() => {
-                let playHistory = state.playHistory.slice(0, -undoCount)
+                let moveHistory = state.moveHistory.slice(0, -undoCount)
                 setState((state) => ({
                   ...state,
-                  playHistory,
-                  importExportGame: exportGame(playHistory),
+                  moveHistory,
+                  importExportGame: exportGame(moveHistory),
                 }))
               }}
             >
@@ -445,14 +489,6 @@ export function Game(prop: {
                 <>
                   AI {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
                   {moveCount} moves
-                </>
-              ) : state.versus === "onePvs" || state.versus === "pvsOne" ? (
-                <>
-                  AI{" "}
-                  {(state.versus === "onePvs") === (turn === 2)
-                    ? '"One"'
-                    : '"PVS"'}{" "}
-                  won after {moveCount} moves
                 </>
               ) : (state.versus === "humanAi") === (turn === 2) ? (
                 <>
@@ -495,10 +531,10 @@ export function Game(prop: {
               <button
                 onClick={() => {
                   try {
-                    let playHistory = importGame(state.importExportGame)
+                    let moveHistory = importGame(state.importExportGame)
                     setState((state) => ({
                       ...state,
-                      playHistory,
+                      moveHistory,
                       importError: "",
                     }))
                   } catch (e: any) {
@@ -509,7 +545,7 @@ export function Game(prop: {
                   }
                 }}
                 disabled={
-                  state.importExportGame === exportGame(state.playHistory)
+                  state.importExportGame === exportGame(state.moveHistory)
                 }
               >
                 Import game
@@ -529,7 +565,7 @@ export function Game(prop: {
             <table className="history history-body" ref={historyBodyRef}>
               {historyColgroup}
               <tbody>
-                {pairs(state.playHistory).map(([a, b], k) => (
+                {pairs(state.moveHistory).map(([a, b], k) => (
                   <tr key={k}>
                     <td>{k + 1}</td>
                     <td>
@@ -571,11 +607,10 @@ export function Game(prop: {
             <tr key={y}>
               <th>{y + 1}</th>
               {row.map((value, x) => {
-                let lastPlay = state.playHistory.slice(-1)[0] ?? {}
+                let lastPlay = state.moveHistory.slice(-1)[0] ?? {}
                 return (
                   <td key={x}>
                     <Cross
-                      onClick={handlePlay}
                       onKeyDown={handleKeyDown}
                       disabled={crossDisabled}
                       className={

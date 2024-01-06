@@ -17,9 +17,9 @@ function processLineOfFive(
   dx: number,
   dy: number,
 ) {
-  // determine the priority, between 0 and 9
+  // A. compute the priority of the line
   let color = 0 // The color of the current line, if any
-  let counter = 0 // The number of stones in the current li
+  let counter = 0 // The number of stones in the current line
   for (let k = 0; k < 5; k++) {
     let c = board[y + dy * k][x + dx * k]
     if (c > 0) {
@@ -39,13 +39,24 @@ function processLineOfFive(
     return
   }
 
-  let priority = counter > 0 ? 2 * counter + +(color === turn) : 1
+  // The priority is a number between 0 and 6 inclusive. The higher the
+  // priority, the more important it is to play in the corresponding
+  // location.
+  let priority: number = 0
+  if (counter < 3) {
+    priority = counter
+  } else {
+    // if counter is 3, we want the priority to be 3 or 4
+    // if counter is 4, we want the priority to be 5 or 6
+    priority = 2 * counter - 3 + +(color === turn)
+  }
 
-  // increase the potential of each of the five positions
+  // B. increase the potential of each position of the line
+  // (each line contains 5 positions)
   for (let k = 0; k < 5; k++) {
-    // (9 - priority) is used to store the best priority first
+    // (6 - priority) is used to store the best priority first
     // and worst priority last
-    potentialGrid[y + dy * k][x + dx * k][9 - priority] += 1
+    potentialGrid[y + dy * k][x + dx * k][7 - priority] += 1
   }
 }
 
@@ -62,7 +73,7 @@ function processLineOfFive(
  *          Said number of token is in relation with the index that the priority
  *          occupies in the array.
  */
-export function processBoardOne(param: ProcessBoardParameter) {
+export function processBoardTwo(param: ProcessBoardParameter) {
   let { board, gameOverRef, potentialGrid, turn } = param
 
   // go through horizontals
@@ -92,13 +103,13 @@ export function processBoardOne(param: ProcessBoardParameter) {
   return potentialGrid
 }
 
-export function aiOneProcessing(param: AiProcessingParameter) {
+export function aiTwoProcessing(param: AiProcessingParameter) {
   let { bestMoveArray, potentialGrid, board } = param
   // compute the potential grid
-  processBoardOne(param)
+  processBoardTwo(param)
 
   // extract the best position(s) and return one
-  let bestPotential = "0".repeat(10)
+  let bestPotential = "0".repeat(6)
   for (let y = 0, c = potentialGrid.length; y < c; y++) {
     for (let x = 0, d = potentialGrid[y].length; x < d; x++) {
       if (board[y][x] !== 0) {
@@ -116,7 +127,7 @@ export function aiOneProcessing(param: AiProcessingParameter) {
   }
 }
 
-export function gomokuAiOne(
+export function gomokuAiTwo(
   board: Board,
   turn: Turn,
   moveHistory: Position[],
@@ -134,10 +145,10 @@ export function gomokuAiOne(
 
   // start from a grid of zeros
   let potentialGrid: PotentialGrid = board.map((row) =>
-    row.map(() => Array.from({ length: 9 }, () => 0)),
+    row.map(() => Array.from({ length: 8 }, () => 0)),
   )
 
-  aiOneProcessing({ gameOverRef, bestMoveArray, potentialGrid, board, turn })
+  aiTwoProcessing({ gameOverRef, bestMoveArray, potentialGrid, board, turn })
 
   if (gameOverRef.current) {
     return "gameover"

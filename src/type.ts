@@ -9,28 +9,42 @@ export interface Position {
   y: number
 }
 
+export interface ClientPos {
+  clientX: number
+  clientY: number
+}
+
 export type Move = Position & { potential: number }
 
 export type PotentialGrid = number[][][]
 
-export type Engine = "one" | "pvs"
-
-export type Versus =
-  | "humanAi"
-  | "aiHuman"
-  | "humanHuman"
-  | "aiAi"
-  | "onePvs"
+export type Engine =
+  | "basicOne"
+  | "basicTwo"
   | "pvsOne"
+  | "pvsTwo"
+  | "defensiveOne"
+
+export type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
+
+export interface ProcessBoardParameter {
+  gameOverRef: { current: boolean }
+  potentialGrid: PotentialGrid
+  board: Board
+  turn: Turn
+}
+
+export type ProcessBoardFunction = (param: ProcessBoardParameter) => void
+
+export interface AiProcessingParameter extends ProcessBoardParameter {
+  bestMoveArray: Position[]
+}
 
 export interface GomokuConfig {
-  defensive: boolean
   engine: Engine
+  secondEngine: "same" | Engine
   versus: Versus
-  timeout: number | null
-  minimumTimeout: number
-  aiOneTimeout: number
-  aiPvsTimeout: number
+  timeout: number
   dark: boolean
   playerColors: string
   highlightColors: string

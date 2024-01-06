@@ -5,8 +5,8 @@ export function isValidCoordinate(n: number) {
   return 0 <= n && n < 19
 }
 
-export function exportGame(playHistory: Position[]): string {
-  return playHistory
+export function exportGame(moveHistory: Position[]): string {
+  return moveHistory
     .map((a, k) => {
       return positionToString(a) + (k % 2 === 0 ? " " : "\n")
     })

@@ -1,4 +1,4 @@
-import { Board, Turn } from "../../type"
+import { Board, ProcessBoardFunction, Turn } from "../../type"
 import { getBoardManager } from "./boardManager"
 
 export function pvs(
@@ -9,9 +9,10 @@ export function pvs(
   turn: Turn,
   depthDampeningFactor: number,
   dynamicLimit: (depth: number) => number,
+  processBoardFunction: ProcessBoardFunction,
 ) {
   let limit = dynamicLimit(depth)
-  let manager = getBoardManager(board, turn, limit)
+  let manager = getBoardManager(board, turn, limit, processBoardFunction)
 
   if (depth === 0) {
     return 0
@@ -35,6 +36,7 @@ export function pvs(
           (3 - turn) as Turn,
           depthDampeningFactor,
           dynamicLimit,
+          processBoardFunction,
         ) * depthDampeningFactor
     } else {
       score =
@@ -46,6 +48,7 @@ export function pvs(
           (3 - turn) as Turn,
           depthDampeningFactor,
           dynamicLimit,
+          processBoardFunction,
         ) * depthDampeningFactor
       if (alpha < score && score < beta) {
         // if it failed high, do a full re-search
@@ -58,6 +61,7 @@ export function pvs(
             (3 - turn) as Turn,
             depthDampeningFactor,
             dynamicLimit,
+            processBoardFunction,
           ) * depthDampeningFactor
       }
     }

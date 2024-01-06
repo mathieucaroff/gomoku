@@ -12,19 +12,10 @@ import { GomokuConfig, Versus } from "./type"
 
 function getConfig(location: Location) {
   let config = resolveSearch<GomokuConfig>(location, {
-    defensive: () => false,
-    engine: () => "one",
+    engine: () => "basicOne",
     versus: () => "humanAi" as Versus,
-    timeout: () => null,
-    minimumTimeout: () => 500,
-    aiOneTimeout: ({ timeout }) => {
-      let t = timeout()
-      return t !== null ? t : 500
-    },
-    aiPvsTimeout: ({ timeout }) => {
-      let t = timeout()
-      return t !== null ? t : 50
-    },
+    secondEngine: () => "same",
+    timeout: () => 500,
     dark: () => false,
     playerColors: () => "000:fff",
     highlightColors: () => "0f0:0f0",

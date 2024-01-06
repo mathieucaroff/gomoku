@@ -1,14 +1,24 @@
-import { Board, Move, PotentialGrid, Turn } from "../../type"
-import { compareNumberProperty, positionToString } from "../../utils"
-import { processBoard } from "../gomokuAiOne"
+import {
+  Board,
+  Move,
+  PotentialGrid,
+  ProcessBoardFunction,
+  Turn,
+} from "../../type"
+import { compareNumberProperty } from "../../utils"
 
-export function getMoveArray(board: Board, turn: Turn, limit: number) {
+export function getMoveArray(
+  board: Board,
+  turn: Turn,
+  limit: number,
+  processBoardFunction: ProcessBoardFunction,
+) {
   let gameOverRef = { current: false }
   let potentialGrid: PotentialGrid = board.map((row) =>
     row.map(() => Array.from({ length: 9 }, () => 0)),
   )
 
-  processBoard(gameOverRef, potentialGrid, board, turn)
+  processBoardFunction({ board, gameOverRef, potentialGrid, turn })
 
   if (gameOverRef.current) {
     return null
