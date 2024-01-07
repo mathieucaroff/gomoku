@@ -182,12 +182,14 @@ export function Game(prop: {
       ;(async () => {
         await pause(5)
         setState((state) => {
-          let now = Date.now()
+          let beginning = Date.now()
+          let last = beginning
           let durationArray: number[] = []
           const shouldStop = () => {
-            let duration = Date.now() - now
-            durationArray.push(duration)
-            return duration > config.maximumThinkingTime
+            let now = Date.now()
+            durationArray.push(now - last)
+            last = now
+            return now - beginning > config.maximumThinkingTime
           }
 
           let { gameover, moveArray, proceedings } = gomokuEngine
