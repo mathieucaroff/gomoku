@@ -34,6 +34,7 @@ export function gomokuPvs(processBoardFunction: ProcessBoardFunction) {
     board: Board,
     turn: Turn,
     moveHistory: Position[],
+    shouldStop: (param: { moveCount: number }) => boolean,
   ): Position[] | "gameover" => {
     // Hard-coded solutions, for the first move
     // ...when playing first
@@ -120,6 +121,8 @@ export function gomokuPvs(processBoardFunction: ProcessBoardFunction) {
         bestPotential = move.potential
         bestMoveArray.splice(0, bestMoveArray.length, move)
       } else if (bestScore === Infinity && move.potential < bestPotential) {
+        break
+      } else if (shouldStop({ moveCount: k })) {
         break
       }
     }

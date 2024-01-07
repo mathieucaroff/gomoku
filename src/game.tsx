@@ -174,9 +174,24 @@ export function Game(prop: {
 
       ;(async () => {
         // let ticket = ++distributor.current
-        // let now = Date.now()
-        let playArray = gomokuAi(board, turn, state.moveHistory)
-        await pause(config.timeout)
+        let now = Date.now()
+        const shouldStop = ({ moveCount }) => {
+          let duration = Date.now() - now
+          let stop = duration > config.maximumThinkingTime
+          if (stop) {
+            console.log(
+              "stopping after having examined",
+              moveCount,
+              "moves, after the duration",
+              duration,
+              "exceeded the limit",
+              config.maximumThinkingTime,
+            )
+          }
+          return stop
+        }
+        let playArray = gomokuAi(board, turn, state.moveHistory, shouldStop)
+        // await pause(config.timeout)
 
         // let delta = Date.now() - now
         // if (delta < config.timeout) {
@@ -188,7 +203,7 @@ export function Game(prop: {
 
         if (playArray !== "gameover" && playArray.length > 0) {
           if (playArray.length > 1) {
-            console.log("playArray.lenght > 1:", playArray)
+            console.log("playArray.lenght > 1:", ...playArray)
           }
           let { x, y } = playArray[Math.floor(Math.random() * playArray.length)]
           let moveHistory = [...state.moveHistory, { x, y }]

@@ -45,6 +45,7 @@ export interface GomokuConfig {
   secondEngine: "same" | Engine
   versus: Versus
   timeout: number
+  maximumThinkingTime: number
   dark: boolean
   playerColors: string
   highlightColors: string
