@@ -1,23 +1,30 @@
 import {
   Board,
+  GetMoveOutput,
   GomokuBasicEngine,
+  GomokuInitProp,
   Position,
   PotentialGrid,
   Turn,
 } from "../type"
 
 export class GomokuAiTwo implements GomokuBasicEngine {
-  private potentialGrid: PotentialGrid
+  private potentialGrid: PotentialGrid = []
+  private gameoverRef = { current: false }
+  private bestMoveArray: Position[] = []
 
-  constructor(
-    private board: Board,
-    private turn: Turn,
-    private gameOverRef = { current: false },
-    private bestMoveArray: Position[] = [],
-    potentialGrid?: PotentialGrid,
-  ) {
-    // start from a grid of zeros if none has been provided
-    this.potentialGrid = potentialGrid ?? this.newPotentialGrid()
+  constructor(private board: Board, private turn: Turn) {
+    // start from a grid of zeros
+    this.init({ board, turn })
+  }
+
+  public init(prop: GomokuInitProp) {
+    this.turn = prop.turn
+    this.board = prop.board ?? this.board
+    this.potentialGrid = prop.potentialGrid ?? this.newPotentialGrid()
+    this.gameoverRef = prop.gameoverRef ?? { current: false }
+    this.bestMoveArray = prop.bestMoveArray ?? []
+    return this
   }
 
   public newPotentialGrid() {
@@ -45,7 +52,7 @@ export class GomokuAiTwo implements GomokuBasicEngine {
       }
     }
     if (counter === 5) {
-      this.gameOverRef.current = true
+      this.gameoverRef.current = true
       return
     }
 
@@ -73,7 +80,7 @@ export class GomokuAiTwo implements GomokuBasicEngine {
   /**
    *
    * @param board the state of the board to evaluate
-   * @param gameOverRef a reference to indicate that a line of five has been
+   * @param gameoverRef a reference to indicate that a line of five has been
    *          found in the game
    * @param turn whose player it is the turn of
    * @returns the potential grid. It associates a potential to each position
@@ -109,7 +116,7 @@ export class GomokuAiTwo implements GomokuBasicEngine {
       }
     }
 
-    return this.potentialGrid
+    return this
   }
 
   aiProcessing() {
@@ -136,23 +143,44 @@ export class GomokuAiTwo implements GomokuBasicEngine {
       }
     }
 
-    return this.bestMoveArray
+    return this
   }
 
-  getMove(moveHistory: Position[]): Position[] | "gameover" {
+  getMove(moveHistory: Position[]): GetMoveOutput {
+    const proceedings = { stopped: false, examinedMoveCount: 0 }
     if (moveHistory.length === 0) {
-      return Array.from({ length: 25 }, (_, k) => ({
-        x: 7 + (k % 5),
-        y: 7 + Math.floor(k / 5),
-      }))
+      return {
+        gameover: false,
+        moveArray: Array.from({ length: 25 }, (_, k) => ({
+          x: 7 + (k % 5),
+          y: 7 + Math.floor(k / 5),
+        })),
+        proceedings,
+      }
     }
 
     this.aiProcessing()
 
-    if (this.gameOverRef.current) {
-      return "gameover"
+    if (this.gameoverRef.current) {
+      return {
+        gameover: true,
+        moveArray: [],
+        proceedings,
+      }
     }
 
-    return this.bestMoveArray
+    return {
+      gameover: false,
+      moveArray: this.bestMoveArray,
+      proceedings,
+    }
+  }
+
+  get() {
+    return {
+      gameoverRef: this.gameoverRef,
+      bestMoveArray: this.bestMoveArray,
+      potentialGrid: this.potentialGrid,
+    }
   }
 }

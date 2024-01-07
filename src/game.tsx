@@ -19,7 +19,7 @@ import {
   Versus,
 } from "./type"
 import { pairs, pause, positionToString } from "./utils"
-import { gomokuPvsClass } from "./core/pvs/gomokuPvsAi"
+import { GomokuPvs } from "./core/pvs/gomokuPvsAi"
 import { GomokuAiOne } from "./core/gomokuAiOne"
 import { GomokuAiTwo } from "./core/gomokuAiTwo"
 
@@ -95,9 +95,8 @@ export function Game(prop: {
   let undoCount =
     state.versus === "humanAi" || state.versus === "aiHuman" ? 2 : 1
 
-  let recommendation = new GomokuAiOne(board, turn).getMove(state.moveHistory)
-  let isGameover = recommendation === "gameover"
-  let disableBoardCrosses = isGameover
+  let { gameover } = new GomokuAiOne(board, turn).getMove(state.moveHistory)
+  let disableBoardCrosses = gameover
   /** \/ reusable variables \/ */
 
   /** /\ text /\ */
@@ -105,13 +104,13 @@ export function Game(prop: {
     (state.versus === "humanAi" && turn === 1) ||
     (state.versus === "aiHuman" && turn === 2) ||
     state.versus === "humanHuman" ||
-    isGameover
+    gameover
       ? ""
       : ", the AI is thinking..."
   /** \/ text \/ */
 
   /** /\ elements /\ */
-  let gameStatus = isGameover ? (
+  let gameStatus = gameover ? (
     <>
       Game Over, player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
       {Math.ceil(state.moveHistory.length / 2)} moves.
@@ -164,55 +163,46 @@ export function Game(prop: {
         engine = state.secondEngine
       }
 
-      let gomokuEngineClass = {
-        basicOne: GomokuAiOne,
-        basicTwo: GomokuAiTwo,
-        pvsOne: gomokuPvsClass(GomokuAiOne),
-        pvsTwo: gomokuPvsClass(GomokuAiTwo),
-        defensiveOne: class extends GomokuAiOne {
-          getMove(moveHistory: Position[]) {
-            return new GomokuAiOne(this.board, (3 - this.turn) as Turn).getMove(
-              moveHistory,
-            )
-          }
-        },
+      let gomokuEngine = {
+        basicOne: new GomokuAiOne(board, turn),
+        basicTwo: new GomokuAiTwo(board, turn),
+        pvsOne: new GomokuPvs(board, turn, new GomokuAiOne(board, turn)),
+        pvsTwo: new GomokuPvs(board, turn, new GomokuAiTwo(board, turn)),
+        defensiveOne: new GomokuAiOne(board, (3 - turn) as Turn),
       }[engine]
 
       ;(async () => {
         await pause(5)
         setState((state) => {
           let now = Date.now()
-          const shouldStop = (param: { moveCount: number }) => {
+          let durationArray: number[] = []
+          const shouldStop = () => {
             let duration = Date.now() - now
-            let stop = duration > config.maximumThinkingTime
-            if (stop) {
-              console.log(
-                "stopping after having examined",
-                param.moveCount,
-                "moves, after the duration",
-                duration,
-                "exceeded the limit",
-                config.maximumThinkingTime,
-              )
-            }
-            return stop
+            durationArray.push(duration)
+            return duration > config.maximumThinkingTime
           }
-          let resultMoveArray = new gomokuEngineClass(board, turn).getMove(
-            state.moveHistory,
-            shouldStop,
-          )
 
-          if (resultMoveArray !== "gameover" && resultMoveArray.length > 0) {
-            if (resultMoveArray.length > 1) {
-              console.log(
-                `moveArray(${resultMoveArray}):`,
-                ...resultMoveArray.map(positionToString),
-              )
+          let { gameover, moveArray, proceedings } = gomokuEngine
+            .init({ board, turn })
+            .getMove(state.moveHistory, shouldStop)
+
+          if (proceedings.stopped) {
+            console.log(
+              "stopping after having examined",
+              proceedings.examinedMoveCount,
+              "moves, after the durations",
+              ...durationArray,
+              "exceeded the limit",
+              config.maximumThinkingTime,
+            )
+          }
+
+          if (!gameover && moveArray.length > 0) {
+            if (moveArray.length > 1) {
+              console.log(`moveArray:`, ...moveArray.map(positionToString))
             }
             let { x, y } =
-              resultMoveArray[
-                Math.floor(Math.random() * resultMoveArray.length)
-              ]
+              moveArray[Math.floor(Math.random() * moveArray.length)]
             let moveHistory = [...state.moveHistory, { x, y }]
             return {
               ...state,
@@ -345,9 +335,9 @@ export function Game(prop: {
   let engineOptionArray: Record<Engine, string> = {
     defensiveOne: "Defensive one (easy)",
     basicOne: "One (normal)",
-    pvsOne: "PVS-one (normal)",
-    basicTwo: "Two (hard)",
-    pvsTwo: "PVS-two (very hard)",
+    pvsOne: "PVS-one (normal-hard)",
+    basicTwo: "Two (very hard)",
+    pvsTwo: "PVS-two (very very hard)",
   }
 
   let handleVersusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -507,7 +497,7 @@ export function Game(prop: {
               Undo
             </button>
           </div>
-          {isGameover && (
+          {gameover && (
             <Modal className="game-status-modal">
               {state.versus === "humanHuman" ? (
                 <>
@@ -536,7 +526,7 @@ export function Game(prop: {
           )}
           <p>
             {gameStatus}{" "}
-            {isGameover ? (
+            {gameover ? (
               <button onClick={handlePlayAgain}>Play again</button>
             ) : null}
           </p>

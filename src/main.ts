@@ -16,7 +16,7 @@ function getConfig(location: Location) {
     versus: () => "humanAi" as Versus,
     secondEngine: () => "same",
     timeout: () => 500,
-    maximumThinkingTime: () => 6_000,
+    maximumThinkingTime: () => 2_000,
     dark: () => false,
     playerColors: () => "000:fff",
     highlightColors: () => "0f0:0f0",

@@ -1,13 +1,13 @@
-import { Board, GomokuBasicEngine, GomokuConsturctor, Turn } from "../../type"
+import { Board, GomokuBasicEngine, Turn } from "../../type"
 import { getMoveArray } from "./moveArray"
 
 export function getBoardManager(
   board: Board,
   turn: Turn,
   limit: number,
-  gomokuBasicEngineClass: GomokuConsturctor<GomokuBasicEngine>,
+  gomokuBasicEngine: GomokuBasicEngine,
 ) {
-  let moveArray = getMoveArray(board, turn, limit, gomokuBasicEngineClass)!
+  let moveArray = getMoveArray(board, turn, limit, gomokuBasicEngine)!
   if (moveArray === null || moveArray.length === 0) {
     return {
       isTerminal: true,

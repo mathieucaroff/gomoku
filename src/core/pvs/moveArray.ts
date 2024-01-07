@@ -1,10 +1,4 @@
-import {
-  Board,
-  GomokuBasicEngine,
-  GomokuConsturctor,
-  Move,
-  Turn,
-} from "../../type"
+import { Board, GomokuBasicEngine, Move, Turn } from "../../type"
 import { compareNumberProperty } from "../../utils"
 
 const comparePotential = compareNumberProperty("potential")
@@ -13,20 +7,17 @@ export function getMoveArray(
   board: Board,
   turn: Turn,
   limit: number,
-  gomokuBasicEngineClass: GomokuConsturctor<GomokuBasicEngine>,
+  gomokuBasicEngine: GomokuBasicEngine,
 ) {
-  let gameOverRef = { current: false }
-  let potentialGrid = new gomokuBasicEngineClass(board, turn).newPotentialGrid()
+  let { potentialGrid, gameoverRef } = gomokuBasicEngine
+    .init({
+      board,
+      turn,
+    })
+    .processBoard()
+    .get()
 
-  new gomokuBasicEngineClass(
-    board,
-    turn,
-    gameOverRef,
-    [],
-    potentialGrid,
-  ).processBoard()
-
-  if (gameOverRef.current) {
+  if (gameoverRef.current) {
     return null
   }
 
