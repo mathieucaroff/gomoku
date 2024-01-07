@@ -1,3 +1,4 @@
+import { default as isEqual } from "lodash/isEqual"
 import React, {
   KeyboardEvent,
   LegacyRef,
@@ -7,7 +8,6 @@ import React, {
 } from "react"
 import { Modal } from "./components/Modal/Modal"
 import { Cross } from "./components/Cross/Cross"
-import { gomokuAiOne, processBoardOne } from "./core/gomokuAiOne"
 import { exportGame, importGame } from "./exportImport"
 import {
   Board,
@@ -19,8 +19,9 @@ import {
   Versus,
 } from "./type"
 import { pairs, pause, positionToString } from "./utils"
-import { gomokuPvs } from "./core/pvs/gomokuPvsAi"
-import { gomokuAiTwo, processBoardTwo } from "./core/gomokuAiTwo"
+import { gomokuPvsClass } from "./core/pvs/gomokuPvsAi"
+import { GomokuAiOne } from "./core/gomokuAiOne"
+import { GomokuAiTwo } from "./core/gomokuAiTwo"
 
 export function PlusSign(props: { width: number; height: number }) {
   return (
@@ -40,7 +41,7 @@ function getBoard(moveHistory: Position[]) {
   let turn: Turn = 1
   moveHistory.forEach(({ x, y }) => {
     board[y][x] = turn
-    turn = 3 - turn
+    turn = (3 - turn) as Turn
   })
   return board
 }
@@ -94,8 +95,9 @@ export function Game(prop: {
   let undoCount =
     state.versus === "humanAi" || state.versus === "aiHuman" ? 2 : 1
 
-  let recommendation = gomokuAiOne(board, turn, state.moveHistory)
-  let crossDisabled = recommendation === "gameover"
+  let recommendation = new GomokuAiOne(board, turn).getMove(state.moveHistory)
+  let isGameover = recommendation === "gameover"
+  let disableBoardCrosses = isGameover
   /** \/ reusable variables \/ */
 
   /** /\ text /\ */
@@ -103,24 +105,23 @@ export function Game(prop: {
     (state.versus === "humanAi" && turn === 1) ||
     (state.versus === "aiHuman" && turn === 2) ||
     state.versus === "humanHuman" ||
-    recommendation === "gameover"
+    isGameover
       ? ""
       : ", the AI is thinking..."
   /** \/ text \/ */
 
   /** /\ elements /\ */
-  let gameStatus =
-    recommendation === "gameover" ? (
-      <>
-        Game Over, player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
-        {Math.ceil(state.moveHistory.length / 2)} moves.
-      </>
-    ) : (
-      <>
-        It is <Cross value={turn} textual />
-        's turn{maybeTheAiIsThinking}
-      </>
-    )
+  let gameStatus = isGameover ? (
+    <>
+      Game Over, player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
+      {Math.ceil(state.moveHistory.length / 2)} moves.
+    </>
+  ) : (
+    <>
+      It is <Cross value={turn} textual />
+      's turn{maybeTheAiIsThinking}
+    </>
+  )
 
   let horizontalHeader = (
     <tr>
@@ -147,7 +148,7 @@ export function Game(prop: {
   // The distributor/ticket system allows to discard calculations when they
   // turn out to be out of date when an event changed the state before the
   // calculation finished.
-  let distributor = useRef(0)
+  // let distributor = useRef(0)
   useEffect(() => {
     if (
       state.versus === "aiAi" ||
@@ -163,56 +164,64 @@ export function Game(prop: {
         engine = state.secondEngine
       }
 
-      let gomokuAi = {
-        basicOne: gomokuAiOne,
-        basicTwo: gomokuAiTwo,
-        pvsOne: gomokuPvs(processBoardOne),
-        pvsTwo: gomokuPvs(processBoardTwo),
-        defensiveOne: (board: Board, turn: Turn, moveHistory: Position[]) =>
-          gomokuAiOne(board, (3 - turn) as Turn, moveHistory),
+      let gomokuEngineClass = {
+        basicOne: GomokuAiOne,
+        basicTwo: GomokuAiTwo,
+        pvsOne: gomokuPvsClass(GomokuAiOne),
+        pvsTwo: gomokuPvsClass(GomokuAiTwo),
+        defensiveOne: class extends GomokuAiOne {
+          getMove(moveHistory: Position[]) {
+            return new GomokuAiOne(this.board, (3 - this.turn) as Turn).getMove(
+              moveHistory,
+            )
+          }
+        },
       }[engine]
 
       ;(async () => {
-        // let ticket = ++distributor.current
-        let now = Date.now()
-        const shouldStop = ({ moveCount }) => {
-          let duration = Date.now() - now
-          let stop = duration > config.maximumThinkingTime
-          if (stop) {
-            console.log(
-              "stopping after having examined",
-              moveCount,
-              "moves, after the duration",
-              duration,
-              "exceeded the limit",
-              config.maximumThinkingTime,
-            )
+        await pause(5)
+        setState((state) => {
+          let now = Date.now()
+          const shouldStop = (param: { moveCount: number }) => {
+            let duration = Date.now() - now
+            let stop = duration > config.maximumThinkingTime
+            if (stop) {
+              console.log(
+                "stopping after having examined",
+                param.moveCount,
+                "moves, after the duration",
+                duration,
+                "exceeded the limit",
+                config.maximumThinkingTime,
+              )
+            }
+            return stop
           }
-          return stop
-        }
-        let playArray = gomokuAi(board, turn, state.moveHistory, shouldStop)
-        // await pause(config.timeout)
+          let resultMoveArray = new gomokuEngineClass(board, turn).getMove(
+            state.moveHistory,
+            shouldStop,
+          )
 
-        // let delta = Date.now() - now
-        // if (delta < config.timeout) {
-        //   await pause(config.timeout - delta)
-        // }
-        // if (ticket !== distributor.current) {
-        //   return
-        // }
-
-        if (playArray !== "gameover" && playArray.length > 0) {
-          if (playArray.length > 1) {
-            console.log("playArray.lenght > 1:", ...playArray)
+          if (resultMoveArray !== "gameover" && resultMoveArray.length > 0) {
+            if (resultMoveArray.length > 1) {
+              console.log(
+                `moveArray(${resultMoveArray}):`,
+                ...resultMoveArray.map(positionToString),
+              )
+            }
+            let { x, y } =
+              resultMoveArray[
+                Math.floor(Math.random() * resultMoveArray.length)
+              ]
+            let moveHistory = [...state.moveHistory, { x, y }]
+            return {
+              ...state,
+              moveHistory,
+              importExportGame: exportGame(moveHistory),
+            }
           }
-          let { x, y } = playArray[Math.floor(Math.random() * playArray.length)]
-          let moveHistory = [...state.moveHistory, { x, y }]
-          setState((state) => ({
-            ...state,
-            moveHistory,
-            importExportGame: exportGame(moveHistory),
-          }))
-        }
+          return state
+        })
       })()
     }
   }, [state.versus, turn, state.engine, state.secondEngine, state.moveHistory])
@@ -264,7 +273,10 @@ export function Game(prop: {
           buttonHoveringPosition = { x, y }
         }
       }
-      if (action === "setHover") {
+      if (
+        action === "setHover" &&
+        !isEqual(state.hover, buttonHoveringPosition)
+      ) {
         setState((state) => ({
           ...state,
           hover: buttonHoveringPosition,
@@ -482,18 +494,20 @@ export function Game(prop: {
               disabled={state.moveHistory.length === 0}
               title={`Undo (${undoCount})`}
               onClick={() => {
-                let moveHistory = state.moveHistory.slice(0, -undoCount)
-                setState((state) => ({
-                  ...state,
-                  moveHistory,
-                  importExportGame: exportGame(moveHistory),
-                }))
+                setState((state) => {
+                  let moveHistory = state.moveHistory.slice(0, -undoCount)
+                  return {
+                    ...state,
+                    moveHistory,
+                    importExportGame: exportGame(moveHistory),
+                  }
+                })
               }}
             >
               Undo
             </button>
           </div>
-          {recommendation === "gameover" && (
+          {isGameover && (
             <Modal className="game-status-modal">
               {state.versus === "humanHuman" ? (
                 <>
@@ -522,7 +536,7 @@ export function Game(prop: {
           )}
           <p>
             {gameStatus}{" "}
-            {recommendation === "gameover" ? (
+            {isGameover ? (
               <button onClick={handlePlayAgain}>Play again</button>
             ) : null}
           </p>
@@ -546,12 +560,14 @@ export function Game(prop: {
               <button
                 onClick={() => {
                   try {
-                    let moveHistory = importGame(state.importExportGame)
-                    setState((state) => ({
-                      ...state,
-                      moveHistory,
-                      importError: "",
-                    }))
+                    setState((state) => {
+                      let moveHistory = importGame(state.importExportGame)
+                      return {
+                        ...state,
+                        moveHistory,
+                        importError: "",
+                      }
+                    })
                   } catch (e: any) {
                     setState((state) => ({
                       ...state,
@@ -627,7 +643,7 @@ export function Game(prop: {
                   <td key={x}>
                     <Cross
                       onKeyDown={handleKeyDown}
-                      disabled={crossDisabled}
+                      disabled={disableBoardCrosses}
                       className={
                         (lastPlay.x === x && lastPlay.y === y
                           ? "cross--highlight "

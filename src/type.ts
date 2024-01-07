@@ -27,17 +27,27 @@ export type Engine =
 
 export type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
-export interface ProcessBoardParameter {
-  gameOverRef: { current: boolean }
-  potentialGrid: PotentialGrid
-  board: Board
-  turn: Turn
+export interface GomokuEngine {
+  getMove(
+    moveHistory: Position[],
+    shouldStop: (param: { moveCount: number }) => boolean,
+  ): Position[] | "gameover"
 }
 
-export type ProcessBoardFunction = (param: ProcessBoardParameter) => void
+export interface GomokuBasicEngine extends GomokuEngine {
+  processBoard(): PotentialGrid
+  aiProcessing(): Position[]
+  newPotentialGrid(): PotentialGrid
+}
 
-export interface AiProcessingParameter extends ProcessBoardParameter {
-  bestMoveArray: Position[]
+export interface GomokuConsturctor<TEngine extends GomokuEngine> {
+  new (
+    board: Board,
+    turn: Turn,
+    gameOverRef?: { current: boolean },
+    bestMoveArray?: Position[],
+    potentialGrid?: PotentialGrid,
+  ): TEngine
 }
 
 export interface GomokuConfig {

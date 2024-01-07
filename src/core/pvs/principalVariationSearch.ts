@@ -1,4 +1,4 @@
-import { Board, ProcessBoardFunction, Turn } from "../../type"
+import { Board, GomokuBasicEngine, GomokuConsturctor, Turn } from "../../type"
 import { getBoardManager } from "./boardManager"
 
 export function pvs(
@@ -9,14 +9,11 @@ export function pvs(
   turn: Turn,
   depthDampeningFactor: number,
   dynamicLimit: (depth: number) => number,
-  processBoardFunction: ProcessBoardFunction,
+  gomokuBasicEngineClass: GomokuConsturctor<GomokuBasicEngine>,
 ) {
   let limit = dynamicLimit(depth)
-  let manager = getBoardManager(board, turn, limit, processBoardFunction)
+  let manager = getBoardManager(board, turn, limit, gomokuBasicEngineClass)
 
-  if (depth === 0) {
-    return 0
-  }
   if (manager.isTerminal) {
     return -(2 ** 412)
   }
@@ -30,38 +27,38 @@ export function pvs(
       score =
         -pvs(
           board,
-          depth - 1,
+          depth + 1,
           -beta,
           -alpha, // search with a **full** window
           (3 - turn) as Turn,
           depthDampeningFactor,
           dynamicLimit,
-          processBoardFunction,
+          gomokuBasicEngineClass,
         ) * depthDampeningFactor
     } else {
       score =
         -pvs(
           board,
-          depth - 1,
+          depth + 1,
           -alpha,
           -alpha, // search with a **null** window
           (3 - turn) as Turn,
           depthDampeningFactor,
           dynamicLimit,
-          processBoardFunction,
+          gomokuBasicEngineClass,
         ) * depthDampeningFactor
       if (alpha < score && score < beta) {
         // if it failed high, do a full re-search
         score =
           -pvs(
             board,
-            depth - 1,
+            depth + 1,
             -beta,
             -alpha,
             (3 - turn) as Turn,
             depthDampeningFactor,
             dynamicLimit,
-            processBoardFunction,
+            gomokuBasicEngineClass,
           ) * depthDampeningFactor
       }
     }

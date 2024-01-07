@@ -11,7 +11,8 @@ export function indirectResolve<T>(info: InfoObject<T>): T {
 
   let resolver: Indirect<T> = {} as any
 
-  Object.keys(info).forEach((key) => {
+  Object.keys(info).forEach((objectKey) => {
+    let key = objectKey as keyof T
     resolver[key] = () => {
       let value = info[key](resolver)
       resolver[key] = () => value
@@ -19,7 +20,8 @@ export function indirectResolve<T>(info: InfoObject<T>): T {
     }
   })
 
-  Object.keys(info).forEach((key) => {
+  Object.keys(info).forEach((objectKey) => {
+    let key = objectKey as keyof T
     result[key] = resolver[key]()
   })
 

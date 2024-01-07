@@ -1,18 +1,18 @@
-import { Board, ProcessBoardFunction, Turn } from "../../type"
+import { Board, GomokuBasicEngine, GomokuConsturctor, Turn } from "../../type"
 import { getMoveArray } from "./moveArray"
 
 export function getBoardManager(
   board: Board,
   turn: Turn,
   limit: number,
-  processBoardFunction: ProcessBoardFunction,
+  gomokuBasicEngineClass: GomokuConsturctor<GomokuBasicEngine>,
 ) {
-  let moveArray = getMoveArray(board, turn, limit, processBoardFunction)!
+  let moveArray = getMoveArray(board, turn, limit, gomokuBasicEngineClass)!
   if (moveArray === null || moveArray.length === 0) {
     return {
       isTerminal: true,
       next: () => "stop" as const,
-      getMove: () => ({ x: -1, y: -1, potential: -1 }),
+      getCurrentMove: () => ({ x: -1, y: -1, potential: -1 }),
       reset: () => {},
     }
   }
@@ -35,7 +35,7 @@ export function getBoardManager(
       board[move.y][move.x] = turn
       return "continue" as const
     },
-    getMove: () => move,
+    getCurrentMove: () => move,
     reset,
   }
 }
