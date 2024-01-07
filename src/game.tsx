@@ -64,6 +64,14 @@ export function Game(prop: {
   }))
   /** \/ state \/ */
 
+  const stop = () => {
+    setState((state) => ({
+      ...state,
+      versus: "humanHuman",
+    }))
+  }
+  window.stop = stop
+
   /** /\ css dark theme management /\ */
   React.useLayoutEffect(() => {
     if (state.dark) {
@@ -495,6 +503,15 @@ export function Game(prop: {
               }}
             >
               Undo
+            </button>
+          </div>
+          <div>
+            <button
+              disabled={state.versus !== "aiAi"}
+              title={`Interrupt AI-AI computations whenever possible`}
+              onClick={stop}
+            >
+              Stop
             </button>
           </div>
           {gameover && (

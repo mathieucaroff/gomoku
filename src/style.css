@@ -136,7 +136,7 @@ table.history td:nth-of-type(2), table.history td:nth-of-type(3) {
 
 /* Scrolling table */
 table.history {
-    max-height: 560px;
+    max-height: 520px;
     overflow-y: auto;
     border: 2px solid black;
 }
