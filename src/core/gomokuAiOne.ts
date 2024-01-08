@@ -16,12 +16,14 @@ export class GomokuAiOne implements GomokuBasicEngine {
   constructor(
     protected board: Board,
     protected turn: Turn,
+    private moveHistory: Position[],
     private defensive = false,
   ) {
-    this.init({ board, turn })
+    this.init({ moveHistory, turn })
   }
 
   public init(prop: GomokuInitProp) {
+    this.moveHistory = prop.moveHistory
     this.turn = this.defensive ? ((3 - prop.turn) as Turn) : prop.turn
     this.board = prop.board ?? this.board
     this.potentialGrid = prop.potentialGrid ?? this.newPotentialGrid()
@@ -139,9 +141,9 @@ export class GomokuAiOne implements GomokuBasicEngine {
     return this
   }
 
-  getMove(moveHistory: Position[]): GetMoveOutput {
+  getMove(): GetMoveOutput {
     const proceedings = { stopped: false, examinedMoveCount: 0 }
-    if (moveHistory.length === 0) {
+    if (this.moveHistory.length === 0) {
       return {
         gameover: false,
         moveArray: Array.from({ length: 25 }, (_, k) => ({

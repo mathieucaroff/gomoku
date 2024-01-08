@@ -13,13 +13,17 @@ export class GomokuAiTwo implements GomokuBasicEngine {
   private gameoverRef = { current: false }
   private bestMoveArray: Position[] = []
 
-  constructor(private board: Board, private turn: Turn) {
-    // start from a grid of zeros
-    this.init({ board, turn })
+  constructor(
+    private board: Board,
+    private turn: Turn,
+    private moveHistory: Position[],
+  ) {
+    this.init({ moveHistory, turn })
   }
 
   public init(prop: GomokuInitProp) {
     this.turn = prop.turn
+    this.moveHistory = prop.moveHistory
     this.board = prop.board ?? this.board
     this.potentialGrid = prop.potentialGrid ?? this.newPotentialGrid()
     this.gameoverRef = prop.gameoverRef ?? { current: false }
@@ -146,9 +150,9 @@ export class GomokuAiTwo implements GomokuBasicEngine {
     return this
   }
 
-  getMove(moveHistory: Position[]): GetMoveOutput {
+  getMove(): GetMoveOutput {
     const proceedings = { stopped: false, examinedMoveCount: 0 }
-    if (moveHistory.length === 0) {
+    if (this.moveHistory.length === 0) {
       return {
         gameover: false,
         moveArray: Array.from({ length: 25 }, (_, k) => ({

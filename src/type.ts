@@ -28,7 +28,7 @@ export type Engine =
 export type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
 export interface GomokuEngine {
-  getMove(moveHistory: Position[], shouldStop: () => boolean): GetMoveOutput
+  getMove(shouldStop: () => boolean): GetMoveOutput
 }
 
 export interface GetMoveOutput {
@@ -42,6 +42,7 @@ export interface GetMoveOutput {
 
 export interface GomokuInitProp {
   turn: Turn
+  moveHistory: Position[]
   board?: Board
   gameoverRef?: { current: boolean }
   bestMoveArray?: Position[]
@@ -57,6 +58,13 @@ export interface GomokuBasicEngine extends GomokuEngine {
     bestMoveArray: Position[]
     potentialGrid: PotentialGrid
   }
+}
+
+export interface GomokuPvsOptionObject {
+  basicEngine: GomokuBasicEngine
+  moveHistory: Position[]
+  depthDampeningFactor?: number
+  dynamicLimit?: (depth: number, halfMoveCount: number) => number
 }
 
 export interface GomokuConfig {

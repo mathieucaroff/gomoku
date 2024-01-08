@@ -103,7 +103,7 @@ export function Game(prop: {
   let undoCount =
     state.versus === "humanAi" || state.versus === "aiHuman" ? 2 : 1
 
-  let { gameover } = new GomokuAiOne(board, turn).getMove(state.moveHistory)
+  let { gameover } = new GomokuAiOne(board, turn, state.moveHistory).getMove()
   let disableBoardCrosses = gameover
   /** \/ reusable variables \/ */
 
@@ -172,11 +172,25 @@ export function Game(prop: {
       }
 
       let gomokuEngine = {
-        basicOne: new GomokuAiOne(board, turn),
-        basicTwo: new GomokuAiTwo(board, turn),
-        pvsOne: new GomokuPvs(board, turn, new GomokuAiOne(board, turn)),
-        pvsTwo: new GomokuPvs(board, turn, new GomokuAiTwo(board, turn)),
-        defensiveOne: new GomokuAiOne(board, (3 - turn) as Turn),
+        basicOne: new GomokuAiOne(board, turn, state.moveHistory),
+        basicTwo: new GomokuAiTwo(board, turn, state.moveHistory),
+        pvsOne: new GomokuPvs(board, turn, {
+          basicEngine: new GomokuAiOne(board, turn, state.moveHistory),
+          moveHistory: state.moveHistory,
+        }),
+        pvsTwo: new GomokuPvs(board, turn, {
+          basicEngine: new GomokuAiTwo(board, turn, state.moveHistory),
+          moveHistory: state.moveHistory,
+          dynamicLimit: (depth: number, halfMoveCount: number) => {
+            return depth === 0 ? 9 : Math.max(1, depth < 1 ? 9 : 5 - depth)
+          },
+        }),
+        defensiveOne: new GomokuAiOne(
+          board,
+          turn as Turn,
+          state.moveHistory,
+          true,
+        ),
       }[engine]
 
       ;(async () => {
@@ -193,17 +207,18 @@ export function Game(prop: {
           }
 
           let { gameover, moveArray, proceedings } = gomokuEngine
-            .init({ board, turn })
-            .getMove(state.moveHistory, shouldStop)
+            .init({ board, turn, moveHistory: state.moveHistory })
+            .getMove(shouldStop)
 
           if (proceedings.stopped) {
             console.log(
-              "stopping after having examined",
+              "(stopping after having examined",
               proceedings.examinedMoveCount,
               "moves, after the durations",
               ...durationArray,
               "exceeded the limit",
               config.maximumThinkingTime,
+              ")",
             )
           }
 
