@@ -22,6 +22,7 @@ import { pairs, pause, positionToString } from "./utils"
 import { GomokuPvs } from "./core/pvs/gomokuPvsAi"
 import { GomokuAiOne } from "./core/gomokuAiOne"
 import { GomokuAiTwo } from "./core/gomokuAiTwo"
+import { UrlExportButton } from "./components/UrlExportButton/UrlExportButton"
 
 export function PlusSign(props: { width: number; height: number }) {
   return (
@@ -53,7 +54,7 @@ export function Game(prop: {
   let { config, styleSheet } = prop
   /** /\ state /\ */
   let [state, setState] = useState(() => ({
-    dark: config.dark,
+    dark: !!+config.dark,
     engine: config.engine,
     secondEngine: config.secondEngine,
     versus: config.versus,
@@ -203,7 +204,7 @@ export function Game(prop: {
             let now = Date.now()
             durationArray.push(now - last)
             last = now
-            return now - beginning > config.maximumThinkingTime
+            return now - beginning > +config.maximumThinkingTime
           }
 
           let { gameover, moveArray, proceedings } = gomokuEngine
@@ -217,7 +218,7 @@ export function Game(prop: {
               "moves, after the durations",
               ...durationArray,
               "exceeded the limit",
-              config.maximumThinkingTime,
+              +config.maximumThinkingTime,
               ")",
             )
           }
@@ -457,7 +458,9 @@ export function Game(prop: {
     <div className="field">
       <div className="general-info">
         <div className="info">
-          <h1>Gomoku</h1>
+          <a className="no-link-decoration" href="/">
+            <h1>Gomoku</h1>
+          </a>
           <p style={{ maxWidth: "300px" }}>
             Fill a row, a column or a diagonal of five consecutive cross of your
             color to win.
@@ -483,7 +486,6 @@ export function Game(prop: {
             <select
               onChange={handleSecondEngineChange}
               value={state.secondEngine}
-              disabled={state.versus !== "aiAi"}
             >
               <option value="same">
                 Same (
@@ -505,6 +507,13 @@ export function Game(prop: {
             </select>
           </div>
           <div>
+            <UrlExportButton
+              propertyNameArray={"versus engine secondEngine dark".split(" ")}
+              targetObject={state}
+              text="Export config to URL"
+            />
+          </div>
+          <div>
             <button
               disabled={state.moveHistory.length === 0}
               title={`Undo (${undoCount})`}
@@ -519,7 +528,7 @@ export function Game(prop: {
                 })
               }}
             >
-              Undo
+              Undo last move
             </button>
           </div>
           <div>
@@ -605,6 +614,19 @@ export function Game(prop: {
               >
                 Import game
               </button>
+            </div>
+            <div>
+              <UrlExportButton
+                propertyNameArray={["game"]}
+                targetObject={{ game: state.moveHistory }}
+                text="Export to URL"
+                transform={{
+                  game: (moveHistory) =>
+                    exportGame(moveHistory)
+                      .replace(/ /g, "_")
+                      .replace(/\n/g, "+"),
+                }}
+              />
             </div>
           </div>
           <div className="historyContainer">
