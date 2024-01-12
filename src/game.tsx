@@ -252,6 +252,7 @@ export function Game(prop: {
     let innerZoomArea =
       zoomArea.querySelector<HTMLDivElement>(".innerZoomArea")!
     zoomArea.classList.add("invisible")
+
     let handleBaseAreaMove = (
       clientPos: ClientPos,
       action: "setHover" | "play",
@@ -285,10 +286,11 @@ export function Game(prop: {
       if (isHoveringOverACross) {
         let x = Math.floor(((clientX - grid.x) * 19) / grid.width)
         let y = Math.floor(((clientY - grid.y) * 19) / grid.height)
-        if (0 < x && x < 19 && 0 < y && y < 19) {
+        if (0 <= x && x < 19 && 0 <= y && y < 19) {
           buttonHoveringPosition = { x, y }
         }
       }
+
       if (
         action === "setHover" &&
         !isEqual(state.hover, buttonHoveringPosition)
