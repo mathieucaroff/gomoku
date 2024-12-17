@@ -2,12 +2,16 @@ import { default as isEqual } from "lodash/isEqual"
 import React, {
   KeyboardEvent,
   LegacyRef,
-  useRef,
   useEffect,
+  useRef,
   useState,
 } from "react"
-import { Modal } from "./components/Modal/Modal"
 import { Cross } from "./components/Cross/Cross"
+import { Modal } from "./components/Modal/Modal"
+import { UrlExportButton } from "./components/UrlExportButton/UrlExportButton"
+import { GomokuAiOne } from "./core/gomokuAiOne"
+import { GomokuAiTwo } from "./core/gomokuAiTwo"
+import { GomokuPvs } from "./core/pvs/gomokuPvsAi"
 import { exportGame, importGame } from "./exportImport"
 import {
   Board,
@@ -19,10 +23,6 @@ import {
   Versus,
 } from "./type"
 import { pairs, pause, positionToString } from "./utils"
-import { GomokuPvs } from "./core/pvs/gomokuPvsAi"
-import { GomokuAiOne } from "./core/gomokuAiOne"
-import { GomokuAiTwo } from "./core/gomokuAiTwo"
-import { UrlExportButton } from "./components/UrlExportButton/UrlExportButton"
 
 export function PlusSign(props: { width: number; height: number }) {
   return (
@@ -104,7 +104,11 @@ export function Game(prop: {
   let undoCount =
     state.versus === "humanAi" || state.versus === "aiHuman" ? 2 : 1
 
-  let { gameover } = new GomokuAiOne(board, turn, state.moveHistory).getMove()
+  let { gameover, moveArray } = new GomokuAiOne(
+    board,
+    turn,
+    state.moveHistory,
+  ).getMove()
   let disableBoardCrosses = gameover
   /** \/ reusable variables \/ */
 
@@ -124,6 +128,8 @@ export function Game(prop: {
       Game Over, player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
       {Math.ceil(state.moveHistory.length / 2)} moves.
     </>
+  ) : moveArray.length === 0 ? (
+    <>Equality was reached after {moveCount} moves.</>
   ) : (
     <>
       It is <Cross value={turn} textual />
@@ -178,13 +184,25 @@ export function Game(prop: {
         pvsOne: new GomokuPvs(board, turn, {
           basicEngine: new GomokuAiOne(board, turn, state.moveHistory),
           moveHistory: state.moveHistory,
+          verbose: config.verbose,
+          dynamicLimit: (depth: number, moveCount: number) =>
+            depth === 0
+              ? 9
+              : Math.max(1, 2 + Math.min(moveCount / 2, 4) - depth),
         }),
         pvsTwo: new GomokuPvs(board, turn, {
           basicEngine: new GomokuAiTwo(board, turn, state.moveHistory),
           moveHistory: state.moveHistory,
-          dynamicLimit: (depth: number, halfMoveCount: number) => {
-            return depth === 0 ? 9 : Math.max(1, depth < 1 ? 9 : 5 - depth)
+          dynamicLimit: (depth: number, moveCount: number) => {
+            if (depth > 5) {
+              return 1
+            }
+            if (moveCount < 6) {
+              return [12, 4, 3, 2, 1, 1][depth]
+            }
+            return Math.max(1, 6 - depth)
           },
+          verbose: config.verbose,
         }),
         defensiveOne: new GomokuAiOne(
           board,
@@ -198,35 +216,19 @@ export function Game(prop: {
         await pause(5)
         setState((state) => {
           let beginning = Date.now()
-          let last = beginning
-          let durationArray: number[] = []
-          const shouldStop = () => {
+          // The remaining function returns 1 when 100% of the allocated time
+          // is still available, and less than 0 when more than all the allocated
+          // time has been used.
+          const remaining = () => {
             let now = Date.now()
-            durationArray.push(now - last)
-            last = now
-            return now - beginning > +config.maximumThinkingTime
+            return 1 + (beginning - now) / +config.maximumThinkingTime
           }
 
-          let { gameover, moveArray, proceedings } = gomokuEngine
+          let { gameover, moveArray } = gomokuEngine
             .init({ board, turn, moveHistory: state.moveHistory })
-            .getMove(shouldStop)
-
-          if (proceedings.stopped) {
-            console.log(
-              "(stopping after having examined",
-              proceedings.examinedMoveCount,
-              "moves, after the durations",
-              ...durationArray,
-              "exceeded the limit",
-              +config.maximumThinkingTime,
-              ")",
-            )
-          }
+            .getMove(remaining, beginning)
 
           if (!gameover && moveArray.length > 0) {
-            if (moveArray.length > 1) {
-              console.log(`moveArray:`, ...moveArray.map(positionToString))
-            }
             let { x, y } =
               moveArray[Math.floor(Math.random() * moveArray.length)]
             let moveHistory = [...state.moveHistory, { x, y }]
@@ -542,9 +544,11 @@ export function Game(prop: {
               Stop
             </button>
           </div>
-          {gameover && (
+          {(gameover || moveArray.length === 0) && (
             <Modal className="game-status-modal">
-              {state.versus === "humanHuman" ? (
+              {!gameover ? (
+                <>Equality was reached after {moveCount} moves</>
+              ) : state.versus === "humanHuman" ? (
                 <>
                   Player {<Cross value={(3 - turn) as Turn} textual />} won in{" "}
                   {moveCount} moves
@@ -571,7 +575,7 @@ export function Game(prop: {
           )}
           <p>
             {gameStatus}{" "}
-            {gameover ? (
+            {gameover || moveArray.length === 0 ? (
               <button onClick={handlePlayAgain}>Play again</button>
             ) : null}
           </p>

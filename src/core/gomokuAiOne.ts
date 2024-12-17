@@ -142,7 +142,6 @@ export class GomokuAiOne implements GomokuBasicEngine {
   }
 
   getMove(): GetMoveOutput {
-    const proceedings = { stopped: false, examinedMoveCount: 0 }
     if (this.moveHistory.length === 0) {
       return {
         gameover: false,
@@ -150,7 +149,6 @@ export class GomokuAiOne implements GomokuBasicEngine {
           x: 7 + (k % 5),
           y: 7 + Math.floor(k / 5),
         })),
-        proceedings,
       }
     }
 
@@ -160,14 +158,12 @@ export class GomokuAiOne implements GomokuBasicEngine {
       return {
         gameover: true,
         moveArray: [],
-        proceedings,
       }
     }
 
     return {
       gameover: false,
       moveArray: this.bestMoveArray,
-      proceedings,
     }
   }
 

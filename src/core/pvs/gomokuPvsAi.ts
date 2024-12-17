@@ -25,6 +25,7 @@ export class GomokuPvs implements GomokuEngine {
   depthDampeningFactor: number
   dynamicLimit: (depth: number, halfMoveCount: number) => number
   moveHistory: Position[]
+  verbose: boolean
 
   constructor(
     private board: Board,
@@ -34,10 +35,8 @@ export class GomokuPvs implements GomokuEngine {
     this.basicEngine = optionObject.basicEngine
     this.depthDampeningFactor = optionObject.depthDampeningFactor ?? 0.5
     this.moveHistory = optionObject.moveHistory
-    this.dynamicLimit =
-      optionObject.dynamicLimit ??
-      ((depth: number, halfMoveCount: number) =>
-        depth === 0 ? 9 : Math.max(1, 2 + Math.min(halfMoveCount, 4) - depth))
+    this.verbose = optionObject.verbose
+    this.dynamicLimit = optionObject.dynamicLimit
   }
 
   init(prop: { turn: Turn; board?: Board }) {
@@ -46,31 +45,13 @@ export class GomokuPvs implements GomokuEngine {
     return this
   }
 
-  getMove(shouldStop: () => boolean): GetMoveOutput {
-    // Hard-coded solutions, for the first move
-    // ...when playing first
+  getMove(remaining: () => number, beginning: number): GetMoveOutput {
+    // Hard-coded solution, for the first move when playing first
     if (this.moveHistory.length === 0) {
-      return this.basicEngine.getMove(shouldStop)
+      return this.basicEngine.getMove(remaining, beginning)
     }
-    // ...when playing second
-    if (this.moveHistory.length === 1) {
-      let move = this.moveHistory[0]
-      if (move.x > 0 && move.x < 18 && move.y > 0 && move.y < 18) {
-        return {
-          gameover: false,
-          moveArray: [
-            { x: move.x - 1, y: move.y },
-            { x: move.x + 1, y: move.y },
-            { x: move.x, y: move.y - 1 },
-            { x: move.x, y: move.y + 1 },
-          ],
-          proceedings: { stopped: false, examinedMoveCount: 0 },
-        }
-      }
-    }
-    // End of hard-coded solutions
-    // Detect friendly and enemy potential lines of five and react immediately to them
 
+    // Detect friendly and enemy potential lines of five and react immediately to them
     let {
       bestMoveArray: preBestMoveArray,
       gameoverRef,
@@ -88,103 +69,129 @@ export class GomokuPvs implements GomokuEngine {
       return {
         gameover: true,
         moveArray: [],
-        proceedings: { stopped: false, examinedMoveCount: 0 },
       }
     }
 
-    if (preBestMoveArray.length > 0) {
-      let move = preBestMoveArray[0]
-      let potential = potentialGrid[move.y][move.x]
-      if (potential[0] > 0 || potential[1] > 0) {
-        return {
-          gameover: false,
-          moveArray: preBestMoveArray,
-          proceedings: { stopped: false, examinedMoveCount: 1 },
-        }
+    if (preBestMoveArray.length === 0) {
+      return {
+        gameover: false,
+        moveArray: [],
       }
     }
 
+    let historyIndex = Math.floor(this.moveHistory.length / 2) + 1
+    let move = preBestMoveArray[0]
+    let potential = potentialGrid[move.y][move.x]
+    let aiCanWinImmediately = potential[0] > 0
+    let otherCouldWinImmediately = potential[1] > 0
     let bestMoveArray: Position[] = []
-    let bestScore = -Infinity
-    let bestPotential = 0
+    if (aiCanWinImmediately || otherCouldWinImmediately) {
+      bestMoveArray = preBestMoveArray
+      let bestScore = this.pvs(this.board, 100, -Infinity, Infinity, this.turn)
+      console.log(
+        "(took",
+        Date.now() - beginning,
+        "ms)",
+        `\n[${historyIndex} ${"_●○"[this.turn]}]`,
+        ...bestMoveArray.map(positionToString),
+        readableScore(bestScore),
+      )
+    } else {
+      let bestScore = -Infinity
+      let bestPotential = 0
 
-    let basicMoveArray = [] as Move[]
-    let variation = ""
-    let stopped = false
-    let moveCount = 0
+      let variation = [] as string[]
+      let stopped = false
+      let moveCount = 0
 
-    let examinedMoveCountAtDepthZero = this.dynamicLimit(
-      0,
-      this.moveHistory.length,
-    )
-    let manager = this.getBoardManager(
-      this.board,
-      this.turn,
-      examinedMoveCountAtDepthZero,
-    )
-
-    for (
-      ;
-      manager.next() === "continue" && moveCount < examinedMoveCountAtDepthZero;
-      moveCount++
-    ) {
-      let score = -this.pvs(
+      let examinedMoveCountAtDepthZero = this.dynamicLimit(
+        0,
+        this.moveHistory.length,
+      )
+      let manager = this.getBoardManager(
         this.board,
-        1,
-        bestScore,
-        Infinity,
-        (3 - this.turn) as Turn,
+        this.turn,
+        examinedMoveCountAtDepthZero,
       )
 
-      let move = manager.getCurrentMove()
-      basicMoveArray.push(move)
-      if (new URLSearchParams(location.search).has("verbose")) {
-        console.log(
-          `[${"_●○"[this.turn]}]`,
-          "move, potential, score",
-          move && positionToString(move),
-          move.potential,
-          readableScore(score),
-        )
-      }
-      if (score === bestScore && move.potential === bestPotential) {
-        bestMoveArray.push(move)
-      } else if (
-        score > bestScore ||
-        (score === bestScore && move.potential > bestPotential)
+      for (
+        ;
+        manager.next() === "continue" &&
+        moveCount < examinedMoveCountAtDepthZero;
+        moveCount++
       ) {
-        if (moveCount > 0) {
-          variation = " --- variation"
-        }
-        bestScore = score
-        bestPotential = move.potential
-        bestMoveArray.splice(0, bestMoveArray.length, move)
-      } else if (bestScore === Infinity && move.potential < bestPotential) {
-        moveCount++
-        break
-      }
-      if (shouldStop()) {
-        stopped = true
-        moveCount++
-        break
-      }
-    }
-    manager.reset()
+        let score = -this.pvs(
+          this.board,
+          1,
+          bestScore,
+          Infinity,
+          (3 - this.turn) as Turn,
+        )
 
-    console.log(
-      ...basicMoveArray.map(positionToString),
-      `\n[${"_●○"[this.turn]}]${variation}`,
-      ...bestMoveArray.map(positionToString),
-      readableScore(bestScore),
-    )
+        let move = manager.getCurrentMove()
+        if (this.verbose) {
+          let historyIndex = Math.floor(this.moveHistory.length / 2) + 1
+          console.log(
+            `[${historyIndex} ${"_●○"[this.turn]}]`,
+            move && positionToString(move),
+            "potential",
+            move.potential,
+            readableScore(score),
+          )
+        }
+        if (score === bestScore && move.potential === bestPotential) {
+          bestMoveArray.push(move)
+        } else if (
+          score > bestScore ||
+          (score === bestScore && move.potential > bestPotential)
+        ) {
+          if (moveCount > 0) {
+            variation.push(positionToString(move))
+          }
+          bestScore = score
+          bestPotential = move.potential
+          bestMoveArray.splice(0, bestMoveArray.length, move)
+        } else if (bestScore === Infinity && move.potential < bestPotential) {
+          moveCount++
+          break
+        }
+        if (remaining() < 0) {
+          stopped = true
+          moveCount++
+          break
+        }
+      }
+      manager.reset()
+
+      let timeInfo: any[] = ["(took", Date.now() - beginning, "ms"]
+
+      if (stopped) {
+        timeInfo[timeInfo.length - 1] += ","
+        timeInfo.push(moveCount, "moves examined)")
+      } else {
+        timeInfo[timeInfo.length - 1] += ")"
+      }
+
+      let basicMoveArray = manager.moveArray?.map(positionToString)
+      basicMoveArray[0] = `\n${basicMoveArray[0]}`
+
+      if (bestMoveArray.length > 1) {
+        let bestMoveString = bestMoveArray.map(positionToString).join(" ")
+        variation[variation.length - 1] += `\n((${bestMoveString}))`
+      }
+
+      console.log(
+        ...timeInfo,
+        ...basicMoveArray,
+        `\n[${historyIndex} ${"_●○"[this.turn]}]`,
+        ...variation,
+        readableScore(bestScore),
+      )
+    }
 
     return {
       gameover: false,
       moveArray: bestMoveArray,
-      proceedings: {
-        stopped,
-        examinedMoveCount: moveCount,
-      },
     }
   }
 
@@ -250,9 +257,26 @@ export class GomokuPvs implements GomokuEngine {
           continue
         }
 
+        // Note the value of a priority in the potential is at most 20
+        // 20 = 5 + 5 + 5 + 5, since there are 4 lines of 5:
+        // - horizontal
+        // - vertical
+        // - diagonal down-right
+        // - diagonal down-left
         let potential = potentialGrid[y][x].reduce((res, v) => res * 100 + v, 0)
         positionArray.push({ x, y, potential })
       }
+    }
+
+    if (positionArray.length === 0) {
+      return []
+    }
+
+    if (limit === 1) {
+      let best = positionArray.reduce((best, candidate) =>
+        best.potential > candidate.potential ? best : candidate,
+      )
+      return [best]
     }
 
     positionArray.sort(comparePotential)
@@ -267,6 +291,7 @@ export class GomokuPvs implements GomokuEngine {
         isTerminal: true,
         next: () => "stop" as const,
         getCurrentMove: () => ({ x: -1, y: -1, potential: -1 }),
+        moveArray: [],
         reset: () => {},
       }
     }
@@ -290,6 +315,7 @@ export class GomokuPvs implements GomokuEngine {
         return "continue" as const
       },
       getCurrentMove: () => move,
+      moveArray: [...moveArray].reverse(),
       reset,
     }
   }

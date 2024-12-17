@@ -33,8 +33,8 @@ export function readableScore(score: number): string {
     return "-Inf"
   }
   const s = (x: string) => (x ? x : "+")
+  if (score === 0) return "="
   let text = score.toString(2)
-  text = text.replace(/^0$/, "=")
   text = text.replace(/^(-?)0.(00+1)/, (_m, a, b) => `=(${b.length}${s(a)})`)
   text = text.replace(/^(-?)1(0+)/, (_m, a, b) => `${s(a)}${b.length}`)
   return text

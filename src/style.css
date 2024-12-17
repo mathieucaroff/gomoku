@@ -5,13 +5,14 @@
        dynamically inserted. See the key-text `styleSheet.insertRule`. */
 
     --first-color: #000;
-    --first-highlight-color: #0F0;
     --second-color: #FFF;
-    --second-highlight-color: #0F0;
+    --neutral-color: #965;
+
+    --highlight-color: #0F0;
 
     --foreground-color: #000000;
     --background-color: #FFFFFF;
-    --board-color: #e0e0e0;
+    --board-color: #B87;
 
     /* Layout variables */
     --cross-side: calc(min(4.7lvh, 4.7lvw) - 2px);
@@ -52,17 +53,22 @@ a.no-link-decoration {
     height: 24px;
     border-radius: 999px;
 
-    background-color: #ccc;
+    background-color: var(--neutral-color);
     border-color: #e3e3e3 #9a9a9a #9a9a9a #e3e3e3;
+    color: black;
 }
-.cross--hover {
-    background-color: #e0e0e0;
+.cross--hover.cross--0 {
+    opacity: 0.5;
 }
-html.dark .cross {
+.cross--0 {
+    border-color: var(--neutral-color);
+    border-style: solid;
+}
+
+html.dark .cross--0 {
     background-color: #444;
-}
-html.dark .cross--hover {
-    background-color: #666;
+    border-style: solid;
+    color: white;
 }
 .cross--1, html.dark .cross--1 {
     background-color: var(--first-color);
@@ -70,11 +76,8 @@ html.dark .cross--hover {
 .cross--2, html.dark .cross--2 {
     background-color: var(--second-color);
 }
-.cross--highlight.cross--1 {
-    border-color: var(--first-highlight-color);
-}
-.cross--highlight.cross--2 {
-    border-color: var(--second-highlight-color);
+.cross--highlight {
+    border-color: var(--highlight-color);
 }
 
 /* dark theme */
@@ -153,6 +156,7 @@ table.history-body {
 
 /* general-info */
 .general-info {
+    margin: 15px;
 }
 
 /* play board */

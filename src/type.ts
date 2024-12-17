@@ -28,16 +28,12 @@ export type Engine =
 export type Versus = "humanAi" | "aiHuman" | "humanHuman" | "aiAi"
 
 export interface GomokuEngine {
-  getMove(shouldStop: () => boolean): GetMoveOutput
+  getMove(remaining: () => number, beginning: number): GetMoveOutput
 }
 
 export interface GetMoveOutput {
   gameover: boolean
   moveArray: Position[]
-  proceedings: {
-    stopped: boolean
-    examinedMoveCount: number
-  }
 }
 
 export interface GomokuInitProp {
@@ -62,18 +58,19 @@ export interface GomokuBasicEngine extends GomokuEngine {
 
 export interface GomokuPvsOptionObject {
   basicEngine: GomokuBasicEngine
+  verbose: boolean
   moveHistory: Position[]
   depthDampeningFactor?: number
-  dynamicLimit?: (depth: number, halfMoveCount: number) => number
+  dynamicLimit: (depth: number, halfMoveCount: number) => number
 }
 
 export interface GomokuConfig {
   engine: Engine
   secondEngine: "same" | Engine
   versus: Versus
-  timeout: number
   maximumThinkingTime: number
   dark: boolean
+  verbose: boolean
   playerColors: string
   highlightColors: string
   game: string
