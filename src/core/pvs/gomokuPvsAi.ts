@@ -69,6 +69,7 @@ export class GomokuPvs implements GomokuEngine {
       return {
         gameover: true,
         moveArray: [],
+        score: 0.5,
       }
     }
 
@@ -76,6 +77,7 @@ export class GomokuPvs implements GomokuEngine {
       return {
         gameover: false,
         moveArray: [],
+        score: 0.5,
       }
     }
 
@@ -192,6 +194,7 @@ export class GomokuPvs implements GomokuEngine {
     return {
       gameover: false,
       moveArray: bestMoveArray,
+      score: 0.5,
     }
   }
 

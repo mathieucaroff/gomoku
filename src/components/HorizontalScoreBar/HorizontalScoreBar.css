@@ -1,0 +1,20 @@
+.horizontalScoreBar {
+  display: flex;
+  width: calc(100% - 2px);
+  border: 1px solid black;
+  overflow: hidden;
+}
+
+.horizontalScoreBar > * {
+  height: 20px;
+}
+
+.horizontalScoreBar .black {
+  background-color: black;
+  flex-shrink: 0;
+}
+
+.horizontalScoreBar .white {
+  background-color: white;
+  flex-grow: 1;
+}

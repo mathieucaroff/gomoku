@@ -84,6 +84,8 @@ export function Game(prop: {
   let undoCount =
     state.versus === "humanAi" || state.versus === "aiHuman" ? 2 : 1
 
+  let score: number = 0.5
+
   let { gameover, moveArray } = new GomokuAiOne(
     board,
     turn,
@@ -204,9 +206,15 @@ export function Game(prop: {
             return 1 + (beginning - now) / +config.maximumThinkingTime
           }
 
-          let { gameover, moveArray } = gomokuEngine
+          let {
+            gameover,
+            moveArray,
+            score: scoreValue,
+          } = gomokuEngine
             .init({ board, turn, moveHistory: state.moveHistory })
             .getMove(remaining, beginning)
+
+          score = scoreValue
 
           if (!gameover && moveArray.length > 0) {
             let { x, y } =
@@ -567,7 +575,14 @@ export function Game(prop: {
         </div>
       </div>
       <table className="board">
-        <thead>{horizontalHeader}</thead>
+        <thead>
+          {/* <tr>
+            <td colSpan={(board[0]?.length ?? 0) + 2} style={{ padding: "0" }}>
+              <HorizontalScoreBar score={score} />
+            </td>
+          </tr> */}
+          {horizontalHeader}
+        </thead>
         <tbody>
           {board.map((row, y) => (
             <tr key={y}>

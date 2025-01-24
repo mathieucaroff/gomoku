@@ -34,6 +34,8 @@ export interface GomokuEngine {
 export interface GetMoveOutput {
   gameover: boolean
   moveArray: Position[]
+  /* a value between -1 and 1. Closer to -1 if white is winning. Closer to 1 if black is winning. */
+  score: number
 }
 
 export interface GomokuInitProp {
