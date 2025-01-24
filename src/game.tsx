@@ -1,7 +1,6 @@
-import { default as isEqual } from "lodash/isEqual"
-import React, {
+import {
   KeyboardEvent,
-  LegacyRef,
+  default as React,
   useEffect,
   useRef,
   useState,
@@ -13,27 +12,8 @@ import { GomokuAiOne } from "./core/gomokuAiOne"
 import { GomokuAiTwo } from "./core/gomokuAiTwo"
 import { GomokuPvs } from "./core/pvs/gomokuPvsAi"
 import { exportGame, importGame } from "./exportImport"
-import {
-  Board,
-  ClientPos,
-  Engine,
-  GomokuConfig,
-  Position,
-  Turn,
-  Versus,
-} from "./type"
+import { Board, Engine, GomokuConfig, Position, Turn, Versus } from "./type"
 import { pairs, pause, positionToString } from "./utils"
-
-export function PlusSign(props: { width: number; height: number }) {
-  return (
-    <img
-      width={props.width}
-      height={props.height}
-      src={new URL("./svg/plus.svg", import.meta.url).href}
-      alt="cross target sign"
-    />
-  )
-}
 
 function getBoard(moveHistory: Position[]) {
   let board: Board = Array.from({ length: 19 }, () =>
@@ -245,99 +225,6 @@ export function Game(prop: {
   }, [state.versus, turn, state.engine, state.secondEngine, state.moveHistory])
   /** \/ play useEffect \/ */
 
-  /** /\ setup zoom on touch /\ */
-  let transformRef = useRef("")
-  let boardRef = useRef<HTMLTableElement>(null)
-  useEffect(() => {
-    let baseArea = document.querySelector<HTMLDivElement>(".baseArea")!
-    let zoomArea = document.querySelector<HTMLDivElement>(".zoomArea")!
-    let innerZoomArea =
-      zoomArea.querySelector<HTMLDivElement>(".innerZoomArea")!
-    zoomArea.classList.add("invisible")
-
-    let handleBaseAreaMove = (
-      clientPos: ClientPos,
-      action: "setHover" | "play",
-    ) => {
-      let { clientX, clientY } = clientPos
-      // board rectangle
-      let board = boardRef.current?.getBoundingClientRect()!
-      let tx = `calc(${board.x + 465 - clientX}px - 16.6svw)`
-      let ty = `${505 - clientY}px`
-      transformRef.current = `scale(3) translate(${tx}, ${ty})`
-      innerZoomArea.style.transform = transformRef.current
-      const BORDER_WIDTH = 23
-      const BORDER_HEIGHT = 23
-      let grid = {
-        x: board.x + BORDER_WIDTH,
-        y: board.y + BORDER_HEIGHT,
-        width: board.width - 2 * BORDER_WIDTH,
-        height: board.height - 2 * BORDER_HEIGHT,
-      }
-      let pos = {
-        x: (clientX - grid.x) % (grid.width / 19),
-        y: (clientY - grid.y) % (grid.height / 19),
-      }
-      const GRID_MARGIN = 2
-      let size = (grid.width + grid.height) / 2 / 19
-      let radius = size / 2 - GRID_MARGIN
-
-      let buttonHoveringPosition: Position | null = null
-      let isHoveringOverACross =
-        (pos.x - radius) ** 2 + (pos.y - radius) ** 2 <= radius ** 2
-      if (isHoveringOverACross) {
-        let x = Math.floor(((clientX - grid.x) * 19) / grid.width)
-        let y = Math.floor(((clientY - grid.y) * 19) / grid.height)
-        if (0 <= x && x < 19 && 0 <= y && y < 19) {
-          buttonHoveringPosition = { x, y }
-        }
-      }
-
-      if (
-        action === "setHover" &&
-        !isEqual(state.hover, buttonHoveringPosition)
-      ) {
-        setState((state) => ({
-          ...state,
-          hover: buttonHoveringPosition,
-        }))
-      } else if (buttonHoveringPosition !== null) {
-        handlePlay(buttonHoveringPosition!)()
-      }
-    }
-    let handleDown = (ev: MouseEvent | TouchEvent) => {
-      zoomArea.classList.remove("invisible")
-      let clientPos = (ev as TouchEvent).touches?.[0] ?? (ev as MouseEvent)
-      handleBaseAreaMove(clientPos, "setHover")
-    }
-    let handleMove = (ev: MouseEvent | TouchEvent) => {
-      ev.preventDefault()
-      let clientPos = (ev as TouchEvent).touches?.[0] ?? (ev as MouseEvent)
-      handleBaseAreaMove(clientPos, "setHover")
-    }
-    let handleUp = (ev: MouseEvent | TouchEvent) => {
-      zoomArea.classList.add("invisible")
-      let clientPos =
-        (ev as TouchEvent).changedTouches?.[0] ?? (ev as MouseEvent)
-      handleBaseAreaMove(clientPos, "play")
-    }
-    window.addEventListener("mousedown", handleDown, true)
-    window.addEventListener("touchstart", handleDown, true)
-    window.addEventListener("mousemove", handleMove, true)
-    window.addEventListener("touchmove", handleMove, true)
-    window.addEventListener("mouseup", handleUp, true)
-    window.addEventListener("touchend", handleUp, true)
-    return () => {
-      baseArea.removeEventListener("mousedown", handleDown, true)
-      baseArea.removeEventListener("touchstart", handleDown, true)
-      baseArea.removeEventListener("mousemove", handleMove, true)
-      baseArea.removeEventListener("touchmove", handleMove, true)
-      window.removeEventListener("mouseup", handleUp, true)
-      window.removeEventListener("touchend", handleUp, true)
-    }
-  }, [])
-  /** \/ setup zoom on touch \/ */
-
   /** /\ auto scroll history */
   let historyBodyRef = useRef<HTMLTableElement>(null)
   let lastHistoryHalfLengthRef = useRef(state.moveHistory.length)
@@ -454,11 +341,7 @@ export function Game(prop: {
   }
   /** \/ handlers \/ */
 
-  /** /\ render and return /\ */
-  const field = (
-    historyBodyRef: LegacyRef<HTMLTableElement>,
-    boardRef: LegacyRef<HTMLTableElement>,
-  ) => (
+  return (
     <div className="field">
       <div className="general-info">
         <div className="info">
@@ -683,7 +566,7 @@ export function Game(prop: {
           </div>
         </div>
       </div>
-      <table className="board" ref={boardRef}>
+      <table className="board">
         <thead>{horizontalHeader}</thead>
         <tbody>
           {board.map((row, y) => (
@@ -695,6 +578,7 @@ export function Game(prop: {
                   <td key={x}>
                     <Cross
                       onKeyDown={handleKeyDown}
+                      onClick={({ x, y }) => handlePlay({ x, y })}
                       disabled={disableBoardCrosses}
                       className={
                         (lastPlay.x === x && lastPlay.y === y
@@ -720,23 +604,4 @@ export function Game(prop: {
       </table>
     </div>
   )
-
-  return (
-    <>
-      <div className="baseArea">{field(historyBodyRef, boardRef)}</div>
-
-      <div className="zoomArea">
-        <div
-          className="innerZoomArea"
-          style={{ transform: transformRef.current }}
-        >
-          {field({ current: null }, { current: null })}
-        </div>
-        <div className="cursorCross">
-          <PlusSign width={100} height={120} />
-        </div>
-      </div>
-    </>
-  )
-  /** \/ render and return \/ */
 }
