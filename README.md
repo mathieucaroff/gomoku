@@ -2,6 +2,8 @@
 
 Play gomoku against an AI [by clicking this link](https://gomokuai.vercel.app/).
 
+[![Game board](asset/screenshot/game.png)](https://gomoku.ea9c.com/)
+
 ## Alternative configurations
 
 - [You play first](https://gomokuai.vercel.app/)
